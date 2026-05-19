@@ -1,0 +1,62 @@
+name: tower_building
+description: "Tower Building - stack blocks and build the tallest tower!"
+publish_to: 'none'
+version: 1.0.1+2
+
+environment:
+  sdk: ^3.11.4
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.8
+  flame: ^1.37.0
+  flame_forge2d: ^0.19.2+6
+  video_player: ^2.11.1
+  shared_preferences: ^2.5.5
+  google_fonts: ^8.1.0
+  audioplayers: ^6.6.0
+
+  # Core flow: attribution + remote gateway + FCM + WebView
+  appsflyer_sdk: ^6.18.0
+  firebase_core: ^3.14.0
+  firebase_messaging: ^15.2.10
+  firebase_app_check: ^0.3.2+8
+  connectivity_plus: ^6.1.4
+  http: ^1.5.0
+  device_info_plus: ^11.5.0
+  flutter_secure_storage: ^9.2.4
+  flutter_local_notifications: ^18.0.1
+  url_launcher: ^6.3.2
+  webview_flutter: ^4.10.0
+  webview_flutter_android: ^4.3.4
+  file_picker: ^10.3.4
+  image_picker: ^1.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+  flutter_launcher_icons: ^0.14.4
+  image: ^4.8.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/logo.webp
+    - assets/logo_name.webp
+    - assets/gameplay_assets/
+    - assets/additional_assets/loading_screen/
+    - assets/additional_assets/notifications/
+    - assets/additional_assets/no_wifi/
+    - assets/music/
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/logo.webp"
+  remove_alpha_ios: true
+  background_color_ios: "#87CEEB"
+  adaptive_icon_background: "#87CEEB"
+  adaptive_icon_foreground: "assets/logo.webp"
