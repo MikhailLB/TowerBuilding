@@ -169,43 +169,53 @@ class _NotifyPromptViewState extends State<NotifyPromptView>
   Widget build(BuildContext context) {
     final video = _video;
     final ready = video != null && video.value.isInitialized;
-    final bg = MediaConfig.notifyOfferBackground;
     return Scaffold(
       backgroundColor: const Color(0xFF050912),
-      body: LayoutBuilder(
-        builder: (context, c) {
-          final landscape = c.maxWidth > c.maxHeight;
-          return Stack(
-            fit: StackFit.expand,
-            children: [
-              if (ready)
-                FittedBox(
-                  fit: BoxFit.cover,
-                  child: SizedBox(
-                    width: video.value.size.width,
-                    height: video.value.size.height,
-                    child: VideoPlayer(video),
-                  ),
-                )
-              else if (_videoFailed && bg != null && bg.isNotEmpty)
-                Image.asset(bg, fit: BoxFit.cover)
-              else
-                const DecoratedBox(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xFF132036), Color(0xFF050912)],
+      body: OrientationBuilder(
+        builder: (context, orientation) {
+          final landscape = orientation == Orientation.landscape;
+          final bgPath = landscape
+              ? (MediaConfig.notifyOfferBackgroundLandscape ??
+                  MediaConfig.notifyOfferBackground)
+              : (MediaConfig.notifyOfferBackgroundPortrait ??
+                  MediaConfig.notifyOfferBackground);
+          final hasBg = bgPath != null && bgPath.isNotEmpty;
+          return LayoutBuilder(
+            builder: (context, c) {
+              return Stack(
+                fit: StackFit.expand,
+                children: [
+                  if (ready)
+                    FittedBox(
+                      fit: BoxFit.cover,
+                      child: SizedBox(
+                        width: video.value.size.width,
+                        height: video.value.size.height,
+                        child: VideoPlayer(video),
+                      ),
+                    )
+                  else if (_videoFailed && hasBg)
+                    Image.asset(bgPath!, fit: BoxFit.cover)
+                  else
+                    const DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Color(0xFF132036), Color(0xFF050912)],
+                        ),
+                      ),
                     ),
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: _buttonBottom,
+                    child:
+                        landscape ? _landscapeButtons(c) : _portraitButtons(c),
                   ),
-                ),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: _buttonBottom,
-                child: landscape ? _landscapeButtons(c) : _portraitButtons(c),
-              ),
-            ],
+                ],
+              );
+            },
           );
         },
       ),

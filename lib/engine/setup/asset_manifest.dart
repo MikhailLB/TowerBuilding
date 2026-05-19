@@ -6,6 +6,8 @@ abstract final class MediaConfig {
   static String? notifyOfferVideoPortrait;
   static String? notifyOfferVideoLandscape;
   static String? notifyOfferBackground;
+  static String? notifyOfferBackgroundPortrait;
+  static String? notifyOfferBackgroundLandscape;
 
   static String? networkPauseBackgroundPortrait;
   static String? networkPauseBackgroundLandscape;
@@ -22,6 +24,8 @@ abstract final class MediaConfig {
     String? notifyOfferVideoPortrait,
     String? notifyOfferVideoLandscape,
     String? notifyOfferBackground,
+    String? notifyOfferBackgroundPortrait,
+    String? notifyOfferBackgroundLandscape,
     String? networkPauseBackgroundPortrait,
     String? networkPauseBackgroundLandscape,
     String? networkPauseImagePortrait,
@@ -34,6 +38,8 @@ abstract final class MediaConfig {
     MediaConfig.notifyOfferVideoPortrait = notifyOfferVideoPortrait;
     MediaConfig.notifyOfferVideoLandscape = notifyOfferVideoLandscape;
     MediaConfig.notifyOfferBackground = notifyOfferBackground;
+    MediaConfig.notifyOfferBackgroundPortrait = notifyOfferBackgroundPortrait;
+    MediaConfig.notifyOfferBackgroundLandscape = notifyOfferBackgroundLandscape;
     MediaConfig.networkPauseBackgroundPortrait = networkPauseBackgroundPortrait;
     MediaConfig.networkPauseBackgroundLandscape = networkPauseBackgroundLandscape;
     MediaConfig.networkPauseImagePortrait = networkPauseImagePortrait;

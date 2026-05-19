@@ -28,11 +28,11 @@ Future<void> main() async {
   // Naming convention: 9x16_* = portrait, 16x9_* = landscape.
   // ---------------------------------------------------------------------------
   MediaConfig.configure(
-    // Notification offer screen — videos.
-    notifyOfferVideoPortrait:
-        'assets/additional_assets/notifications/9x16_notification.mp4',
-    notifyOfferVideoLandscape:
-        'assets/additional_assets/notifications/16x9_notification.mp4',
+    // Notification offer screen — static images (webp).
+    notifyOfferBackgroundPortrait:
+        'assets/additional_assets/notifications/9x16_notification.webp',
+    notifyOfferBackgroundLandscape:
+        'assets/additional_assets/notifications/16x9_notification.webp',
     // No-wifi screen — static images (webp).
     networkPauseImagePortrait:
         'assets/additional_assets/no_wifi/9x16_no_wifi_screen.webp',
