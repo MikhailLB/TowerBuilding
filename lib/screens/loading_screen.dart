@@ -258,10 +258,21 @@ class _LoadingBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final width = isPortrait ? size.width * 0.7 : size.height * 0.4;
+    if (isPortrait) {
+      return Image.asset(
+        ResourcePaths.loadingBar(state),
+        width: size.width * 0.7,
+        fit: BoxFit.contain,
+        gaplessPlayback: true,
+      );
+    }
+    // In landscape the bar image can be portrait-oriented, making it very tall
+    // and pushing the visual bar into the middle of the screen.
+    // Constrain both dimensions so the bar stays compact and near the bottom.
     return Image.asset(
       ResourcePaths.loadingBar(state),
-      width: width,
+      width: size.width * 0.45,
+      height: size.height * 0.22,
       fit: BoxFit.contain,
       gaplessPlayback: true,
     );
