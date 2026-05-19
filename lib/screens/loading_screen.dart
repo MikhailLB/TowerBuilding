@@ -207,9 +207,15 @@ class _LoadingScreenState extends State<LoadingScreen>
   Widget build(BuildContext context) {
     final isPortrait =
         MediaQuery.orientationOf(context) == Orientation.portrait;
+    final size = MediaQuery.sizeOf(context);
     final video = _video;
     final videoReady = video != null && video.value.isInitialized;
     final screenReady = videoReady || _videoFailed;
+
+    // In landscape the bar image is portrait-oriented and very tall, so its
+    // visual content ends up near screen centre with bottom:2. Push it down
+    // by overflowing below the screen edge (Stack clips the excess).
+    final barBottom = isPortrait ? 6.0 : -size.height * 0.27;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -220,7 +226,7 @@ class _LoadingScreenState extends State<LoadingScreen>
           Positioned(
             left: 0,
             right: 0,
-            bottom: isPortrait ? 6 : 2,
+            bottom: barBottom,
             child: IgnorePointer(
               child: AnimatedOpacity(
                 duration: const Duration(milliseconds: 300),
@@ -258,21 +264,10 @@ class _LoadingBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    if (isPortrait) {
-      return Image.asset(
-        ResourcePaths.loadingBar(state),
-        width: size.width * 0.7,
-        fit: BoxFit.contain,
-        gaplessPlayback: true,
-      );
-    }
-    // In landscape the bar image can be portrait-oriented, making it very tall
-    // and pushing the visual bar into the middle of the screen.
-    // Constrain both dimensions so the bar stays compact and near the bottom.
+    final width = isPortrait ? size.width * 0.7 : size.height * 0.4;
     return Image.asset(
       ResourcePaths.loadingBar(state),
-      width: size.width * 0.45,
-      height: size.height * 0.22,
+      width: width,
       fit: BoxFit.contain,
       gaplessPlayback: true,
     );
