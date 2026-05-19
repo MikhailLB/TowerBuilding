@@ -1,7 +1,7 @@
 name: tower_building
 description: "Tower Building - stack blocks and build the tallest tower!"
 publish_to: 'none'
-version: 1.0.1+2
+version: 1.0.0+1
 
 environment:
   sdk: ^3.11.4
@@ -16,6 +16,7 @@ dependencies:
   shared_preferences: ^2.5.5
   google_fonts: ^8.1.0
   audioplayers: ^6.6.0
+  url_launcher: ^6.3.1
 
 dev_dependencies:
   flutter_test:
