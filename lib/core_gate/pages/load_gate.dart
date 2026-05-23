@@ -103,6 +103,9 @@ class _LoadGateState extends State<LoadGate> {
       debugPrint('[TB.LG] native cold-start url → $nativeColdUrl');
       await widget.vault.writeMode(LaunchMode.web);
       await widget.vault.consumeOneShotUrl();
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+      await WidgetsBinding.instance.endOfFrame;
+      await Future.delayed(const Duration(milliseconds: 150));
       unawaited(_dispatchBackground());
       _goContent(nativeColdUrl);
       return;
@@ -269,7 +272,8 @@ class _LoadGateState extends State<LoadGate> {
     }
   }
 
-  void _goContent(String url) {
+  void _goContent(String url, {bool? layoutSettle}) {
+    final settle = layoutSettle ?? Platform.isIOS;
     if (_navigated) return;
     _navigated = true;
     if (widget.vault.needsPushPrompt()) {
@@ -284,18 +288,19 @@ class _LoadGateState extends State<LoadGate> {
               signal: widget.signal,
               dispatch: widget.dispatch,
               destination: url,
+              layoutSettle: settle,
             ),
           ));
         } else {
-          _directShell(url);
+          _directShell(url, layoutSettle: settle);
         }
       });
     } else {
-      _directShell(url);
+      _directShell(url, layoutSettle: settle);
     }
   }
 
-  void _directShell(String url) {
+  void _directShell(String url, {bool layoutSettle = false}) {
     if (!mounted) return;
     Navigator.of(context).pushReplacement(MaterialPageRoute(
       builder: (_) => WebShell(
@@ -303,6 +308,7 @@ class _LoadGateState extends State<LoadGate> {
         vault: widget.vault,
         alerts: widget.alerts,
         probe: widget.probe,
+        layoutSettle: layoutSettle,
       ),
     ));
   }

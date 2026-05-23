@@ -58,6 +58,8 @@ flutter:
     - assets/logo_name.webp
     - assets/gameplay_assets/
     - assets/additional_assets/loading_screen/
+    - assets/additional_assets/no_wifi/
+    - assets/additional_assets/notifications/
     - assets/music/
 
 flutter_launcher_icons:

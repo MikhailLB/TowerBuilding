@@ -24,6 +24,8 @@ class WebShell extends StatefulWidget {
   final AlertRelay alerts;
   final ConnectivityProbe probe;
   final VoidCallback? onFirstPaint;
+  /// Delays WKWebView mount until immersive mode settles (cold-start push).
+  final bool layoutSettle;
 
   const WebShell({
     super.key,
@@ -32,6 +34,7 @@ class WebShell extends StatefulWidget {
     required this.alerts,
     required this.probe,
     this.onFirstPaint,
+    this.layoutSettle = false,
   });
 
   @override
@@ -45,6 +48,7 @@ class _WebShellState extends State<WebShell> with WidgetsBindingObserver {
   String? _lastMainFrameUrl;
   int _redirectRetries = 0;
   bool _firstPaintFired = false;
+  bool _showWebView = false;
   Widget? _fullscreenOverlay;
   void Function()? _dismissOverlay;
 
@@ -89,7 +93,13 @@ class _WebShellState extends State<WebShell> with WidgetsBindingObserver {
       ..setNavigationDelegate(_buildDelegate());
 
     _configurePlatform();
-    _wv.loadRequest(Uri.parse(widget.destination));
+
+    if (widget.layoutSettle && Platform.isIOS) {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _deferredMount());
+    } else {
+      _showWebView = true;
+      _wv.loadRequest(Uri.parse(widget.destination));
+    }
 
     widget.alerts.onPushUrl = (url) {
       if (!mounted) return;
@@ -106,6 +116,43 @@ class _WebShellState extends State<WebShell> with WidgetsBindingObserver {
     });
 
     WidgetsBinding.instance.addPostFrameCallback((_) => _drainStash());
+  }
+
+  Future<void> _deferredMount() async {
+    _applyImmersive();
+    await WidgetsBinding.instance.endOfFrame;
+    await Future.delayed(const Duration(milliseconds: 400));
+    if (!mounted) return;
+    setState(() => _showWebView = true);
+    _wv.loadRequest(Uri.parse(widget.destination));
+  }
+
+  void _scheduleViewportNudges() {
+    for (final ms in const [400, 800, 1200, 1800]) {
+      Future.delayed(Duration(milliseconds: ms), () {
+        if (!mounted) return;
+        _nudgeViewport();
+        _reapplySafeArea();
+      });
+    }
+  }
+
+  void _nudgeViewport() {
+    _wv.runJavaScript(r'''
+(function(){
+  try{
+    window.dispatchEvent(new Event('resize'));
+    window.dispatchEvent(new Event('orientationchange'));
+    if(window.visualViewport)
+      window.visualViewport.dispatchEvent(new Event('resize'));
+    var h=window.innerHeight;
+    if(document.documentElement)
+      document.documentElement.style.setProperty('min-height',h+'px');
+    if(document.body)
+      document.body.style.setProperty('min-height',h+'px');
+  }catch(_){}
+})();
+''');
   }
 
   Future<void> _drainStash() async {
@@ -127,17 +174,8 @@ class _WebShellState extends State<WebShell> with WidgetsBindingObserver {
         _injectKeyboardFix();
         _injectAntiZoom();
         _injectMediaAutoplay();
-        // Force viewport resize after immersive mode settles (~800ms) to
-        // fix stretched layout on cold-start push tap.
-        Future.delayed(const Duration(milliseconds: 800), () {
-          if (!mounted) return;
-          _wv.runJavaScript(
-            'window.dispatchEvent(new Event("resize"));'
-            'if(window.visualViewport)'
-            '  window.visualViewport.dispatchEvent(new Event("resize"));',
-          );
-          _injectSafeArea();
-        });
+        _nudgeViewport();
+        _scheduleViewportNudges();
         if (!_firstPaintFired) {
           _firstPaintFired = true;
           Future.delayed(const Duration(milliseconds: 600), () {
@@ -245,6 +283,10 @@ class _WebShellState extends State<WebShell> with WidgetsBindingObserver {
 
   // ── JS injections ─────────────────────────────────────────
 
+  void _reapplySafeArea() {
+    _wv.runJavaScript('try{window.__tbSaApply&&window.__tbSaApply();}catch(_){}');
+  }
+
   void _injectSafeArea() {
     _wv.runJavaScript(r'''
 (function(){
@@ -269,6 +311,7 @@ class _WebShellState extends State<WebShell> with WidgetsBindingObserver {
     if(s.textContent!==CSS)s.textContent=CSS;
     if(h.lastElementChild!==s)h.appendChild(s);
   }
+  window.__tbSaApply=apply;
   apply();
   ['pushState','replaceState'].forEach(function(n){
     var o=history[n];history[n]=function(){var r=o.apply(this,arguments);setTimeout(apply,150);setTimeout(apply,600);return r;};
@@ -380,7 +423,9 @@ class _WebShellState extends State<WebShell> with WidgetsBindingObserver {
                 top: safe.top, bottom: safe.bottom,
                 left: safe.left, right: safe.right,
               ),
-              child: WebViewWidget(controller: _wv),
+              child: _showWebView
+                  ? WebViewWidget(controller: _wv)
+                  : const ColoredBox(color: Colors.black),
             ),
             if (_fullscreenOverlay != null)
               Positioned.fill(child: _fullscreenOverlay!),

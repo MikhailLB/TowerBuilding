@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../infra/connectivity_probe.dart';
 
-/// No-internet screen with a Retry button. Shows background image if present,
-/// otherwise falls back to a programmatic dark design.
+import '../infra/connectivity_probe.dart';
+import '../ui/gate_assets.dart';
+
+/// No-internet screen — full-screen artwork with a Retry overlay.
 class OfflineScreen extends StatefulWidget {
   final WidgetBuilder retryBuilder;
   final ConnectivityProbe probe;
@@ -27,6 +28,7 @@ class _OfflineScreenState extends State<OfflineScreen>
   @override
   void initState() {
     super.initState();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     _press = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 130),
@@ -49,7 +51,10 @@ class _OfflineScreenState extends State<OfflineScreen>
     final online = await widget.probe.isOnline();
     if (!mounted) return;
     if (!online) {
-      setState(() { _busy = false; _hint = true; });
+      setState(() {
+        _busy = false;
+        _hint = true;
+      });
       Future.delayed(const Duration(seconds: 3), () {
         if (mounted) setState(() => _hint = false);
       });
@@ -63,81 +68,58 @@ class _OfflineScreenState extends State<OfflineScreen>
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final landscape = size.width > size.height;
+    final orientation = MediaQuery.of(context).orientation;
+    final landscape = orientation == Orientation.landscape;
+    final bg = GateAssets.noWifi(orientation);
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D1B2A),
-      body: SafeArea(
+      backgroundColor: Colors.black,
+      body: SizedBox(
+        width: size.width,
+        height: size.height,
         child: Stack(
           fit: StackFit.expand,
           children: [
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 40),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    AnimatedBuilder(
-                      animation: _press,
-                      builder: (_, _) => Transform.scale(
-                        scale: 1.0 - 0.05 * _press.value,
-                        child: GestureDetector(
-                          onTap: _busy ? null : _retry,
-                          child: Container(
-                            width: landscape ? 260 : size.width * 0.6,
-                            height: 56,
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(16),
-                              gradient: _busy
-                                  ? null
-                                  : const LinearGradient(
-                                      colors: [Color(0xFFFFCC00), Color(0xFFFF8C00)],
-                                      begin: Alignment.topLeft,
-                                      end: Alignment.bottomRight,
-                                    ),
-                              color: _busy ? Colors.amber.withValues(alpha: 0.3) : null,
-                              boxShadow: _busy ? null : [
-                                BoxShadow(
-                                  color: Colors.amber.withValues(alpha: 0.4),
-                                  blurRadius: 16,
-                                  offset: const Offset(0, 6),
-                                ),
-                              ],
-                            ),
-                            child: Center(
-                              child: _busy
-                                  ? const SizedBox(
-                                      width: 22, height: 22,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2.5, color: Colors.amber,
-                                      ),
-                                    )
-                                  : const Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(Icons.refresh_rounded,
-                                            color: Color(0xFF1A0A00), size: 24),
-                                        SizedBox(width: 8),
-                                        Text('Retry',
-                                            style: TextStyle(
-                                              color: Color(0xFF1A0A00),
-                                              fontSize: 18,
-                                              fontWeight: FontWeight.w800,
-                                            )),
-                                      ],
-                                    ),
-                            ),
-                          ),
-                        ),
-                      ),
+            Image.asset(
+              bg,
+              fit: BoxFit.cover,
+              gaplessPlayback: true,
+              errorBuilder: (context, error, stackTrace) =>
+                  const ColoredBox(color: Color(0xFF0D1B2A)),
+            ),
+            if (landscape)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: size.height * 0.06,
+                child: Center(
+                  child: SizedBox(
+                    width: size.width * 0.32,
+                    child: _RetryButton(
+                      busy: _busy,
+                      press: _press,
+                      onTap: _retry,
+                      compact: true,
                     ),
-                  ],
+                  ),
+                ),
+              )
+            else
+              Positioned(
+                left: size.width * 0.08,
+                right: size.width * 0.08,
+                bottom: size.height * 0.07,
+                child: _RetryButton(
+                  busy: _busy,
+                  press: _press,
+                  onTap: _retry,
                 ),
               ),
-            ),
             if (_hint)
               Positioned(
-                top: 12, left: 20, right: 20,
+                top: 12,
+                left: 20,
+                right: 20,
                 child: DecoratedBox(
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.55),
@@ -154,6 +136,77 @@ class _OfflineScreenState extends State<OfflineScreen>
                 ),
               ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _RetryButton extends StatelessWidget {
+  const _RetryButton({
+    required this.busy,
+    required this.press,
+    required this.onTap,
+    this.compact = false,
+  });
+
+  final bool busy;
+  final AnimationController press;
+  final VoidCallback onTap;
+  final bool compact;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: press,
+      builder: (context, child) => Transform.scale(
+        scale: 1.0 - 0.05 * press.value,
+        child: GestureDetector(
+          onTap: busy ? null : onTap,
+          child: Container(
+            width: double.infinity,
+            padding: EdgeInsets.symmetric(vertical: compact ? 12 : 18),
+            decoration: BoxDecoration(
+              gradient: busy
+                  ? null
+                  : const LinearGradient(
+                      colors: [Color(0xFFFFCC00), Color(0xFFFF9900)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+              color: busy ? Colors.amber.withValues(alpha: 0.3) : null,
+              borderRadius: BorderRadius.circular(compact ? 40 : 50),
+              boxShadow: busy
+                  ? null
+                  : [
+                      BoxShadow(
+                        color: Colors.amber.withValues(alpha: 0.4),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+            ),
+            child: Center(
+              child: busy
+                  ? SizedBox(
+                      width: compact ? 20 : 22,
+                      height: compact ? 20 : 22,
+                      child: const CircularProgressIndicator(
+                        strokeWidth: 2.5,
+                        color: Colors.amber,
+                      ),
+                    )
+                  : Text(
+                      'Retry',
+                      style: TextStyle(
+                        color: const Color(0xFF1A0A00),
+                        fontSize: compact ? 16 : 20,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+            ),
+          ),
         ),
       ),
     );
