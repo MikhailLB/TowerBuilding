@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import '../ui/visual_tokens.dart';
 import '../game/game_status.dart';
@@ -38,6 +39,11 @@ class _GameScreenState extends State<GameScreen> {
   @override
   void initState() {
     super.initState();
+    // Lock to portrait for gameplay on all devices including iPad.
+    SystemChrome.setPreferredOrientations(const [
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
     // Defer the Flame world creation until after the route transition has
     // finished painting. Otherwise we try to spin up Forge2D + load textures
     // mid-animation which can stall the UI thread for hundreds of ms.
@@ -114,6 +120,13 @@ class _GameScreenState extends State<GameScreen> {
 
   Future<void> _onExit() async {
     AudioService.instance.playSfx(Sfx.buttonClick);
+    // Restore all orientations so loading/menu screens can use landscape.
+    SystemChrome.setPreferredOrientations(const [
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
     if (mounted) Navigator.of(context).pop();
   }
 

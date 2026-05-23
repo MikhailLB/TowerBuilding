@@ -242,7 +242,8 @@ class _LoadingBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
-    final width = isPortrait ? size.width * 0.7 : size.height * 0.4;
+    final width = (isPortrait ? size.width * 0.7 : size.height * 0.4)
+        .clamp(0.0, 340.0);
     return Image.asset(
       ResourcePaths.loadingBar(state),
       width: width,
