@@ -6,7 +6,7 @@ import 'app_links.dart';
 abstract final class CoreConfig {
   static const String iosStoreId = '6771136039';
   static const String bundleId = 'com.stackforge.towerbuilding';
-  static const String appTitle = 'Tower Building';
+  static const String appTitle = 'TowerBuilding: Stack & Balance';
 
   /// Seconds before push opt-in re-appears after Skip (3 days).
   static const int pushCooldownSeconds = 259200;

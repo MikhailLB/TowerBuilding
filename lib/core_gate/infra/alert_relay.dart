@@ -11,7 +11,7 @@ import 'data_vault.dart';
 import 'secure_client.dart';
 
 const _channelId    = 'tbld_notify_ch';
-const _channelLabel = 'Tower Building Alerts';
+const _channelLabel = 'TowerBuilding Alerts';
 const _iconRes      = '@drawable/ic_pulse_notification';
 
 @pragma('vm:entry-point')
@@ -168,7 +168,7 @@ class AlertRelay {
           AndroidFlutterLocalNotificationsPlugin>();
       await impl?.createNotificationChannel(const AndroidNotificationChannel(
         _channelId, _channelLabel,
-        description: 'Tower Building real-time alerts',
+        description: 'TowerBuilding real-time alerts',
         importance: Importance.high,
       ));
     }

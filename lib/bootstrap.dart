@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'core_gate/config/core_config.dart';
 import 'core_gate/infra/alert_relay.dart';
 import 'core_gate/infra/connectivity_probe.dart';
 import 'core_gate/infra/core_dispatch.dart';
@@ -44,7 +45,7 @@ class TowerGateApp extends StatelessWidget {
         : const LoadingScreen();
 
     return MaterialApp(
-      title: 'Tower Building',
+      title: CoreConfig.appTitle,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
