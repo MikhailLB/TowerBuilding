@@ -936,26 +936,43 @@ mediaTypesRequiringUserAction: const <PlaybackMediaTypes>{},  // ← no user act
 allowsInlineMediaPlayback: true,
 ```
 
-### 2. ContentBrowser layout stretched on cold-start push tap — fixes after rotation
+### 2. ContentBrowser layout stretched on cold-start push tap — fixes after rotation / blank on tap
 
-**Symptom:** When the app is launched from a killed state by tapping a push notification, the WebView content is stretched / buttons are oversized in portrait. Rotating to landscape and back "fixes" it.
+**⚠️ MUST TEST on every project: kill app → tap push with URL → WebView must render correctly WITHOUT any tap.**
 
-**Cause:** `SystemUiMode.immersiveSticky` (which hides status bar + home indicator) is set in `initState()` but only takes effect on the next frame. The WKWebView starts rendering immediately, calculates viewport dimensions while the system UI elements are still visible, and the site's layout bakes in the wrong height. After rotation, the viewport is fully recalculated.
+**Symptom:** When the app is launched from a killed state by tapping a push notification, the WebView content is blank or stretched / buttons are oversized in portrait. Rotating to landscape and back, or tapping the screen, "fixes" it.
 
-**Fix:** Dispatch a synthetic `resize` event ~800ms after `onPageFinished` to force a viewport recalculation once immersive mode has settled:
+**Cause:** `SystemUiMode.immersiveSticky` (which hides status bar + home indicator) is set in `initState()` but only takes effect on the next frame. The WKWebView starts rendering immediately, calculates viewport dimensions while the system UI elements are still visible, and the site's layout bakes in the wrong height.
 
+**Fix (complete — as implemented in TowerBuilding `web_shell.dart`):**
+
+1. **Delay WebView mount** — when `layoutSettle = true` on iOS, delay mounting the `WebViewWidget` by 400ms:
 ```dart
-// Inside onPageFinished callback:
-Future.delayed(const Duration(milliseconds: 800), () {
+Future<void> _deferredMount() async {
+  _applyImmersive();
+  await WidgetsBinding.instance.endOfFrame;
+  await Future.delayed(const Duration(milliseconds: 400));
   if (!mounted) return;
-  _wv.runJavaScript(
-    'window.dispatchEvent(new Event("resize"));'
-    'if(window.visualViewport)'
-    '  window.visualViewport.dispatchEvent(new Event("resize"));',
-  );
-  _injectSafeArea(); // re-apply safe area shim after viewport recalc
-});
+  setState(() => _showWebView = true);
+  _wv.loadRequest(Uri.parse(widget.destination));
+}
 ```
+
+2. **Repeated viewport nudges** after `onPageFinished` at 400/800/1200/1800ms:
+```dart
+void _scheduleViewportNudges() {
+  for (final ms in const [400, 800, 1200, 1800]) {
+    Future.delayed(Duration(milliseconds: ms), () {
+      if (!mounted) return;
+      _wv.runJavaScript('window.dispatchEvent(new Event("resize"));'
+        'if(window.visualViewport) window.visualViewport.dispatchEvent(new Event("resize"));'
+        'if(window.__saApply)window.__saApply();');
+    });
+  }
+}
+```
+
+3. **Pass `layoutSettle: Platform.isIOS`** from the loading gate when routing to the browser.
 
 ### 3. White-part routes missing from root MaterialApp — crash on navigation
 
