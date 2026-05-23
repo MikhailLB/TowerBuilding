@@ -33,6 +33,11 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
+  # Disable Swift Package Manager — use CocoaPods to avoid SPM modifying
+  # project.pbxproj after pod install, which causes sandbox sync errors in CI.
+  config:
+    enable-swift-package-manager: false
+
   assets:
     - assets/logo.webp
     - assets/logo_name.webp
