@@ -5,9 +5,11 @@ import 'package:flutter/services.dart';
 import '../ui/resource_paths.dart';
 import '../ui/visual_tokens.dart';
 import '../main.dart';
+import '../core_gate/config/core_config.dart';
 import '../services/audio_service.dart';
 import '../widgets/pixel_button.dart';
 import 'game_screen.dart';
+import 'legal_browser_screen.dart';
 import 'settings_screen.dart';
 import 'shop_screen.dart';
 
@@ -70,6 +72,15 @@ class _MainMenuScreenState extends State<MainMenuScreen>
     AudioService.instance.playSfx(Sfx.buttonClick);
     await Navigator.of(context).push(
       MaterialPageRoute<void>(builder: (_) => const SettingsScreen()),
+    );
+  }
+
+  void _openLegalPage({required String title, required String url}) {
+    AudioService.instance.playSfx(Sfx.buttonClick);
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => LegalBrowserScreen(title: title, url: url),
+      ),
     );
   }
 
@@ -137,6 +148,30 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                         fontSize: 24,
                         color: PixelButtonColor.secondary,
                       ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _LegalLink(
+                            label: 'Privacy',
+                            onTap: () => _openLegalPage(
+                              title: 'Privacy Policy',
+                              url: CoreConfig.privacyUrl,
+                            ),
+                          ),
+                          Text(
+                            '  ·  ',
+                            style: AppTextStyles.body(size: 14),
+                          ),
+                          _LegalLink(
+                            label: 'Support',
+                            onTap: () => _openLegalPage(
+                              title: 'Support',
+                              url: CoreConfig.supportUrl,
+                            ),
+                          ),
+                        ],
+                      ),
                     ],
                   ),
                 ],
@@ -195,6 +230,27 @@ class _TopBar extends StatelessWidget {
           ],
         ),
       ],
+    );
+  }
+}
+
+class _LegalLink extends StatelessWidget {
+  const _LegalLink({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Text(
+        label,
+        style: AppTextStyles.body(size: 14).copyWith(
+          decoration: TextDecoration.underline,
+          decorationColor: AppColors.text.withValues(alpha: 0.7),
+        ),
+      ),
     );
   }
 }

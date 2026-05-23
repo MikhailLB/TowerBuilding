@@ -3,9 +3,9 @@ import 'dart:async';
 import 'package:flame/flame.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:video_player/video_player.dart';
 
+import '../services/game_assets.dart';
 import '../ui/resource_paths.dart';
 import 'main_menu_screen.dart';
 
@@ -120,35 +120,13 @@ class _LoadingScreenState extends State<LoadingScreen>
   }
 
   Future<void> _preloadGameAssets() async {
-    Flame.images.prefix = '';
-    final paths = <String>[
-      ResourcePaths.sky,
-      ResourcePaths.ground,
-      ResourcePaths.cloud,
-      ResourcePaths.hook,
-      ResourcePaths.startBg,
-      ResourcePaths.startBuilding,
-      ResourcePaths.logo,
-      ResourcePaths.logoName,
-      ...ResourcePaths.allBlocks,
-      for (var i = 1; i <= 4; i++) ResourcePaths.loadingBar(i),
-    ];
-    for (final p in paths) {
+    await GameAssets.ensureLoaded();
+    for (var i = 1; i <= 4; i++) {
       try {
-        await Flame.images.load(p);
+        await Flame.images.load(ResourcePaths.loadingBar(i));
       } catch (e) {
-        debugPrint('LoadingScreen: failed to preload $p: $e');
+        debugPrint('LoadingScreen: failed to preload bar $i: $e');
       }
-    }
-    try {
-      GoogleFonts.bangers();
-      GoogleFonts.fredoka();
-      await GoogleFonts.pendingFonts(<TextStyle>[
-        GoogleFonts.bangers(),
-        GoogleFonts.fredoka(),
-      ]);
-    } catch (e) {
-      debugPrint('LoadingScreen: Google Fonts preload failed: $e');
     }
   }
 

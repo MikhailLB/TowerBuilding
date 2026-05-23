@@ -16,6 +16,7 @@ import 'core_gate/infra/data_vault.dart';
 import 'core_gate/infra/install_signal.dart';
 import 'core_gate/infra/secure_client.dart';
 import 'services/audio_service.dart';
+import 'services/game_assets.dart';
 import 'services/storage_service.dart';
 import 'state/game_progress.dart';
 
@@ -55,7 +56,10 @@ Future<void> main() async {
   // ── White-part game init ───────────────────────────────────
   final storage = await StorageService.create();
   progress = GameProgress(storage);
-  await AudioService.init(progress);
+  await Future.wait([
+    AudioService.init(progress),
+    GameAssets.ensureLoaded(),
+  ]);
 
   // ── Gray gate init — Firebase + UA warmup + vault in parallel
   final firebaseFuture = _bootFirebase();

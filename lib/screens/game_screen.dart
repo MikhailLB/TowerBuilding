@@ -8,6 +8,7 @@ import '../game/game_status.dart';
 import '../game/tower_game.dart';
 import '../main.dart';
 import '../services/audio_service.dart';
+import '../services/game_assets.dart';
 import '../widgets/pixel_button.dart';
 
 /// Hosts the [TowerGame] inside a [GameWidget] and adds Flutter-side overlays
@@ -41,6 +42,7 @@ class _GameScreenState extends State<GameScreen> {
     // finished painting. Otherwise we try to spin up Forge2D + load textures
     // mid-animation which can stall the UI thread for hundreds of ms.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await GameAssets.ensureLoaded();
       await Future<void>.delayed(const Duration(milliseconds: 350));
       if (!mounted) return;
       setState(() {
