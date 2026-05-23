@@ -101,23 +101,25 @@ class _MainMenuScreenState extends State<MainMenuScreen>
           ),
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 20),
               child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   _TopBar(
                     coins: progress.coins,
                     highScore: progress.highScore,
                     onSettings: _openSettings,
                   ),
-                  const Spacer(),
-                  Image.asset(
-                    ResourcePaths.logoName,
-                    width: size.width * 0.8,
-                    fit: BoxFit.contain,
+                  Expanded(
+                    child: Center(
+                      child: Image.asset(
+                        ResourcePaths.logoName,
+                        width: size.width * 0.8,
+                        fit: BoxFit.contain,
+                      ),
+                    ),
                   ),
-                  const Spacer(flex: 4),
                   Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
                       PixelButton(
                         label: 'Play',
@@ -126,7 +128,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                         height: 78,
                         fontSize: 30,
                       ),
-                      const SizedBox(height: 18),
+                      const SizedBox(height: 14),
                       PixelButton(
                         label: 'Shop',
                         onPressed: _openShop,

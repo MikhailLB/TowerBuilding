@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 
-import '../../screens/loading_screen.dart';
+import '../../screens/main_menu_screen.dart';
 import '../infra/alert_relay.dart';
 import '../infra/connectivity_probe.dart';
 import '../infra/core_dispatch.dart';
@@ -307,13 +307,13 @@ class _LoadGateState extends State<LoadGate> {
     ));
   }
 
-  /// Navigate to the white game. Goes to LoadingScreen which preloads
-  /// game assets and then navigates to the main menu.
+  /// Navigate to the white game. LoadGate already serves as the loading
+  /// experience — go straight to the main menu to avoid a double splash.
   void _goGame() {
     if (_navigated) return;
     _navigated = true;
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const LoadingScreen()),
+      MaterialPageRoute(builder: (_) => const MainMenuScreen()),
     );
   }
 
