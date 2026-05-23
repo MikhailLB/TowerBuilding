@@ -1,11 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  Opts out of Google Backup and device-transfer for the gray flow's persistent
-  state. Without this, a factory-reset device restored from backup could
-  inherit a stale LaunchRoute.web, opening the WebView for a user who was
-  organic on the old device. Excluding the gray keys forces a clean first-
-  launch evaluation on every fresh install.
--->
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="sharedpref"/>
