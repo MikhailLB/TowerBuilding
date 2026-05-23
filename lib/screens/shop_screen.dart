@@ -4,7 +4,6 @@ import '../ui/resource_paths.dart';
 import '../ui/visual_tokens.dart';
 import '../main.dart';
 import '../services/audio_service.dart';
-import '../widgets/pixel_button.dart';
 
 class ShopScreen extends StatefulWidget {
   const ShopScreen({super.key});
@@ -99,9 +98,9 @@ class _ShopScreenState extends State<ShopScreen> {
                           child: ListView.separated(
                             scrollDirection: Axis.horizontal,
                             itemCount: 6,
-                            separatorBuilder: (_, __) =>
+                            separatorBuilder: (context, index) =>
                                 const SizedBox(width: 12),
-                            itemBuilder: (_, index) {
+                            itemBuilder: (context, index) {
                               final skin = index + 1;
                               final owned =
                                   progress.ownedSkins.contains(skin);

@@ -5,7 +5,6 @@ import 'package:flutter/services.dart';
 import '../ui/resource_paths.dart';
 import '../ui/visual_tokens.dart';
 import '../main.dart';
-import '../core_gate/config/core_config.dart';
 import '../services/audio_service.dart';
 import '../widgets/pixel_button.dart';
 import 'game_screen.dart';
@@ -156,7 +155,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                             label: 'Privacy',
                             onTap: () => _openLegalPage(
                               title: 'Privacy Policy',
-                              url: CoreConfig.privacyUrl,
+                              url: 'https://towerbuildingstackbalance.com/privacy-policy.html',
                             ),
                           ),
                           Text(
@@ -167,7 +166,7 @@ class _MainMenuScreenState extends State<MainMenuScreen>
                             label: 'Support',
                             onTap: () => _openLegalPage(
                               title: 'Support',
-                              url: CoreConfig.supportUrl,
+                              url: 'https://towerbuildingstackbalance.com/support.html',
                             ),
                           ),
                         ],
