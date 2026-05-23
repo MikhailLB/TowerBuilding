@@ -47,26 +47,20 @@ List<int> encode(String s) {
 String fmt(List<int> v) => '[${v.join(', ')}]';
 
 void main() {
-  // ════════════════════════════════════════════════════════
-  // ⚠️  FILL IN YOUR ACTUAL VALUES BELOW
-  // ════════════════════════════════════════════════════════
-
   // lib/core_gate/config/core_endpoint.dart
-  const configHost = 'https://TODO_YOUR_DOMAIN.com';   // TODO
-  const configPath = '/config.php';                     // TODO
+  const configHost = 'https://towerbuildingstackbalance.com';
+  const configPath = '/config.php';
 
   // AppsFlyer GCD endpoint (change only if AF changes their URL)
   const gcdHost = 'https://gcdsdk.appsflyer.com/install_data/v4.0/';
 
   // lib/core_gate/config/tracking_keys.dart
-  const appsflyerKey = 'TODO_APPSFLYER_DEV_KEY';        // TODO
-  const firebaseProj = 'TODO_FIREBASE_PROJECT_NUMBER';  // TODO (numeric)
+  const appsflyerKey = 'c8eg9BLQNxAmhFn7P6jkrR';
+  const firebaseProj = '337036206535';
 
   // lib/core_gate/config/app_links.dart
-  const privacyUrl = 'https://TODO_YOUR_DOMAIN.com/privacy-policy.html'; // TODO
-  const supportUrl = 'https://TODO_YOUR_DOMAIN.com/support.html';        // TODO
-
-  // ════════════════════════════════════════════════════════
+  const privacyUrl = 'https://towerbuildingstackbalance.com/privacy-policy.html';
+  const supportUrl = 'https://towerbuildingstackbalance.com/support.html';
 
   print('// ── core_endpoint.dart ──────────────────────────');
   print('const h = ${fmt(encode(configHost))};  // host');

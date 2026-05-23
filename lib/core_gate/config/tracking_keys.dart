@@ -1,25 +1,11 @@
 import '../../cipher/key_mask.dart';
 
-/// ════════════════════════════════════════════════════════════
-/// ⚠️  TEMPLATE — encode your AppsFlyer & Firebase credentials
-/// ════════════════════════════════════════════════════════════
-///
-/// trackingDevKey()      → AppsFlyer Dev Key
-///                         Dashboard → App Settings → Dev Key
-///
-/// messagingProjectId()  → Firebase Project Number (numeric)
-///                         google-services.json → "project_number"
-
-// TODO: replace with your encoded AppsFlyer dev key bytes
 String trackingDevKey() {
-  const v = <int>[];
-  if (v.isEmpty) return '';
+  const v = [160, 206, 143, 227, 233, 235, 142, 153, 185, 227, 133, 243, 135, 186, 172, 231, 196, 157, 194, 235, 167, 147];
   return reveal(v);
 }
 
-// TODO: replace with your encoded Firebase project number bytes
 String messagingProjectId() {
-  const v = <int>[];
-  if (v.isEmpty) return '';
+  const v = [235, 151, 178, 236, 231, 224, 187, 237, 205, 177, 133, 182];
   return reveal(v);
 }

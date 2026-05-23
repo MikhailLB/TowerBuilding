@@ -1,16 +1,7 @@
 import '../../cipher/key_mask.dart';
 
-/// ════════════════════════════════════════════════════════════
-/// ⚠️  TEMPLATE — encode your privacy/support URLs
-/// ════════════════════════════════════════════════════════════
-///
-/// Run tool/encode_creds.dart to generate byte arrays.
-
-// TODO: encoded https://yourdomain.com/privacy-policy.html
-const List<int> _privacyMask = <int>[];
-
-// TODO: encoded https://yourdomain.com/support.html
-const List<int> _supportMask = <int>[];
+const List<int> _privacyMask = [240, 155, 142, 235, 232, 19, 137, 107, 241, 153, 133, 243, 142, 182, 161, 231, 197, 155, 139, 236, 172, 147, 135, 227, 225, 219, 140, 223, 183, 145, 166, 115, 240, 152, 198, 231, 196, 155, 139, 236, 172, 147, 135, 227, 225, 219, 140, 223, 184, 143, 165, 126, 241, 153, 198, 239];
+const List<int> _supportMask = [240, 155, 142, 235, 232, 19, 137, 107, 241, 153, 133, 243, 142, 182, 161, 231, 197, 155, 139, 236, 172, 147, 135, 227, 225, 219, 140, 223, 183, 145, 166, 115, 240, 152, 198, 231, 196, 155, 139, 236, 172, 147, 135, 227, 225, 219, 140, 223, 185, 151, 188, 127, 241, 155, 198, 237];
 
 String get appPrivacyPageUrl =>
     _privacyMask.isEmpty ? '' : reveal(_privacyMask);

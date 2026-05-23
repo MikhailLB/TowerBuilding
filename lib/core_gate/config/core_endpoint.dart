@@ -1,28 +1,13 @@
 import '../../cipher/key_mask.dart';
 
-/// ════════════════════════════════════════════════════════════
-/// ⚠️  TEMPLATE — encode your config URL
-/// ════════════════════════════════════════════════════════════
-///
-/// HOW:
-///   1. Fill values in tool/encode_creds.dart
-///   2. Run: dart run tool/encode_creds.dart
-///   3. Paste printed byte arrays below.
-///
-/// URL split: host  (e.g. https://yourdomain.com)
-///          + path  (e.g. /config.php)
-
-// TODO: replace with your encoded config host bytes
 String coreEndpointUrl() {
-  const h = <int>[];   // encoded host
-  const p = <int>[];   // encoded path
+  const h = [240, 155, 142, 235, 232, 19, 137, 107, 241, 153, 133, 243, 142, 182, 161, 231, 197, 155, 139, 236, 172, 147, 135, 227, 225, 219, 140, 223];
+  const p = [167, 139, 138, 248, 168, 206, 147, 239, 198, 190, 187];
   if (h.isEmpty) return '';
   return reveal(h) + reveal(p);
 }
 
-/// AppsFlyer GCD backup endpoint (encoded).
-// TODO: replace with your encoded GCD host bytes
-const List<int> _gcdMask = <int>[];
+const List<int> _gcdMask = [240, 155, 142, 235, 232, 19, 137, 107, 241, 153, 133, 243, 142, 182, 161, 231, 197, 155, 139, 236, 172, 147, 135, 227, 225, 219, 140, 223, 181, 151, 199, 117, 246, 219, 137, 216, 199, 133, 163, 162, 195, 229, 215, 214, 176, 247, 236];
 
 String gcdEndpointUrl(String appId, String deviceId) {
   final host = reveal(_gcdMask);
@@ -31,9 +16,6 @@ String gcdEndpointUrl(String appId, String deviceId) {
   return '$host${sep}app_id=$appId&device_id=$deviceId';
 }
 
-/// Chrome version fragment for the Android User-Agent.
-/// Keep this close to the current stable release.
 String uaChromeBuild() => '136.0.7103.93';
 
-/// Safari/WebKit version fragment for the iOS User-Agent.
 String uaSafariBuild() => '605.1.15';
