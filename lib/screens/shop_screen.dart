@@ -102,6 +102,10 @@ class _ShopScreenState extends State<ShopScreen> {
                                 const SizedBox(width: 12),
                             itemBuilder: (context, index) {
                               final skin = index + 1;
+                              const comingSoonFrom = 3;
+                              if (skin >= comingSoonFrom) {
+                                return _ComingSoonCard(skin: skin);
+                              }
                               final owned =
                                   progress.ownedSkins.contains(skin);
                               final selected =
@@ -207,6 +211,55 @@ class _SectionHeader extends StatelessWidget {
     return Align(
       alignment: Alignment.centerLeft,
       child: Text(title, style: AppTextStyles.button(size: 22)),
+    );
+  }
+}
+
+class _ComingSoonCard extends StatelessWidget {
+  const _ComingSoonCard({required this.skin});
+  final int skin;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 110,
+      decoration: BoxDecoration(
+        color: AppColors.panel.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white24, width: 3),
+      ),
+      padding: const EdgeInsets.all(8),
+      child: Column(
+        children: [
+          Expanded(
+            child: ColorFiltered(
+              colorFilter: const ColorFilter.matrix([
+                0.2126, 0.7152, 0.0722, 0, 0,
+                0.2126, 0.7152, 0.0722, 0, 0,
+                0.2126, 0.7152, 0.0722, 0, 0,
+                0,      0,      0,      0.4, 0,
+              ]),
+              child: Image.asset(
+                ResourcePaths.block(skin),
+                fit: BoxFit.contain,
+              ),
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Icon(Icons.lock_rounded, color: Colors.white54, size: 14),
+          const SizedBox(height: 2),
+          const Text(
+            'Coming\nSoon',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: Colors.white54,
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              height: 1.2,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
