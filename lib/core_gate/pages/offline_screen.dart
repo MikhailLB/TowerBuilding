@@ -68,6 +68,7 @@ class _OfflineScreenState extends State<OfflineScreen>
   @override
   Widget build(BuildContext context) {
     final size = MediaQuery.of(context).size;
+    final topInset = MediaQuery.of(context).viewPadding.top;
     final orientation = MediaQuery.of(context).orientation;
     final landscape = orientation == Orientation.landscape;
     final bg = GateAssets.noWifi(orientation);
@@ -117,7 +118,7 @@ class _OfflineScreenState extends State<OfflineScreen>
               ),
             if (_hint)
               Positioned(
-                top: 12,
+                top: topInset + 12,
                 left: 20,
                 right: 20,
                 child: DecoratedBox(
