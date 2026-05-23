@@ -117,22 +117,28 @@ class _LoadGateState extends State<LoadGate> {
     switch (mode) {
       case LaunchMode.web:
         _setBar(_BarStep.midway);
-        final pushFuture = widget.alerts.bootstrap().catchError((_) {});
+        unawaited(widget.alerts.bootstrap().catchError((_) {}));
         unawaited(widget.signal.warmup().catchError((_) {}));
-        await _handleWebMode(pushFuture: pushFuture);
+        await _handleWebMode();
         break;
       case LaunchMode.game:
         _setBar(_BarStep.midway);
         unawaited(widget.alerts.bootstrap().catchError((_) {}));
         unawaited(widget.signal.warmup().catchError((_) {}));
-        final recovered = await _tryRecoverWebMode();
+        final recovered = await _tryRecoverWebMode(
+          conversionTimeout: const Duration(seconds: 2),
+          deepLinkTimeout: const Duration(seconds: 2),
+        ).timeout(const Duration(seconds: 3), onTimeout: () => false);
         if (recovered) return;
         _setBar(_BarStep.done);
-        await Future.delayed(const Duration(milliseconds: 600));
+        await Future.delayed(const Duration(milliseconds: 200));
         _goGame();
         break;
       case LaunchMode.fresh:
-        await widget.alerts.bootstrap().catchError((_) {});
+        await Future.wait([
+          widget.alerts.bootstrap().catchError((_) {}),
+          widget.signal.warmup().catchError((_) {}),
+        ]);
         await _handleFreshMode();
         break;
     }
@@ -157,10 +163,9 @@ class _LoadGateState extends State<LoadGate> {
     if (!online) { if (mounted) _goOffline(fresh: true); return; }
 
     _setBar(_BarStep.midway);
-    await widget.signal.warmup();
     await Future.wait([
-      widget.signal.awaitConversion(),
-      widget.signal.awaitDeepLink(),
+      widget.signal.awaitConversion(timeout: const Duration(seconds: 5)),
+      widget.signal.awaitDeepLink(timeout: const Duration(seconds: 3)),
     ]);
     final locale = Platform.localeName.replaceAll('-', '_');
     final body = await widget.signal.buildPayload(
@@ -171,26 +176,24 @@ class _LoadGateState extends State<LoadGate> {
     if (reply.granted && reply.destination != null) {
       await widget.vault.writeMode(LaunchMode.web);
       _setBar(_BarStep.done);
-      await Future.delayed(const Duration(milliseconds: 400));
+      await Future.delayed(const Duration(milliseconds: 200));
       if (!mounted) return;
       _goContent(reply.destination!);
     } else {
       await widget.vault.writeMode(LaunchMode.game);
       _setBar(_BarStep.done);
-      await Future.delayed(const Duration(milliseconds: 400));
+      await Future.delayed(const Duration(milliseconds: 200));
       if (!mounted) return;
       _goGame();
     }
   }
 
-  Future<void> _handleWebMode({Future<void>? pushFuture}) async {
-    final netFuture = widget.probe.isOnline();
-    if (pushFuture != null) await Future.wait([netFuture, pushFuture]);
-    final online = await netFuture;
+  Future<void> _handleWebMode() async {
+    final online = await widget.probe.isOnline();
 
     if (!online) {
       _setBar(_BarStep.done);
-      await Future.delayed(const Duration(milliseconds: 400));
+      await Future.delayed(const Duration(milliseconds: 200));
       if (mounted) _goOffline(fresh: false);
       return;
     }
@@ -198,16 +201,24 @@ class _LoadGateState extends State<LoadGate> {
     final oneShotUrl = await widget.vault.consumeOneShotUrl();
     if (oneShotUrl != null) {
       _setBar(_BarStep.done);
-      await Future.delayed(const Duration(milliseconds: 400));
+      await Future.delayed(const Duration(milliseconds: 200));
       if (mounted) _goContent(oneShotUrl);
       return;
     }
 
     final savedUrl = await widget.vault.readSavedUrl();
+    if (savedUrl != null) {
+      unawaited(_refreshWebInBackground());
+      _setBar(_BarStep.done);
+      await Future.delayed(const Duration(milliseconds: 200));
+      if (mounted) _goContent(savedUrl);
+      return;
+    }
+
     await widget.signal.warmup();
     await Future.wait([
-      widget.signal.awaitConversion(timeout: const Duration(seconds: 5)),
-      widget.signal.awaitDeepLink(),
+      widget.signal.awaitConversion(timeout: const Duration(seconds: 4)),
+      widget.signal.awaitDeepLink(timeout: const Duration(seconds: 2)),
     ]);
     final locale = Platform.localeName.replaceAll('-', '_');
     final body = await widget.signal.buildPayload(
@@ -216,27 +227,43 @@ class _LoadGateState extends State<LoadGate> {
     final reply = await widget.dispatch.send(body);
 
     _setBar(_BarStep.done);
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: 200));
     if (!mounted) return;
 
     if (reply.granted && reply.destination != null) {
       _goContent(reply.destination!);
       return;
     }
-    if (savedUrl != null) {
-      _goContent(savedUrl);
-    } else {
-      _goOffline(fresh: false);
+    _goOffline(fresh: false);
+  }
+
+  Future<void> _refreshWebInBackground() async {
+    try {
+      await widget.signal.warmup();
+      await Future.wait([
+        widget.signal.awaitConversion(timeout: const Duration(seconds: 3)),
+        widget.signal.awaitDeepLink(timeout: const Duration(seconds: 2)),
+      ]);
+      final body = await widget.signal.buildPayload(
+        locale: Platform.localeName.replaceAll('-', '_'),
+        pushToken: widget.alerts.token,
+      );
+      await widget.dispatch.send(body);
+    } catch (e) {
+      debugPrint('[TB.LG] background refresh error: $e');
     }
   }
 
-  Future<bool> _tryRecoverWebMode() async {
+  Future<bool> _tryRecoverWebMode({
+    Duration conversionTimeout = const Duration(seconds: 3),
+    Duration deepLinkTimeout = const Duration(seconds: 2),
+  }) async {
     final online = await widget.probe.isOnline();
     if (!online) return false;
     await widget.signal.warmup();
     await Future.wait([
-      widget.signal.awaitConversion(timeout: const Duration(seconds: 8)),
-      widget.signal.awaitDeepLink(),
+      widget.signal.awaitConversion(timeout: conversionTimeout),
+      widget.signal.awaitDeepLink(timeout: deepLinkTimeout),
     ]);
     final locale = Platform.localeName.replaceAll('-', '_');
     final body = await widget.signal.buildPayload(
@@ -246,7 +273,7 @@ class _LoadGateState extends State<LoadGate> {
     if (!(reply.granted && reply.destination != null)) return false;
     await widget.vault.writeMode(LaunchMode.web);
     _setBar(_BarStep.done);
-    await Future.delayed(const Duration(milliseconds: 400));
+    await Future.delayed(const Duration(milliseconds: 200));
     if (!mounted) return true;
     _goContent(reply.destination!);
     return true;
@@ -259,8 +286,8 @@ class _LoadGateState extends State<LoadGate> {
         widget.signal.warmup().catchError((_) {}),
       ]);
       await Future.wait([
-        widget.signal.awaitConversion(timeout: const Duration(seconds: 6)),
-        widget.signal.awaitDeepLink(),
+        widget.signal.awaitConversion(timeout: const Duration(seconds: 4)),
+        widget.signal.awaitDeepLink(timeout: const Duration(seconds: 2)),
       ]);
       final body = await widget.signal.buildPayload(
         locale: Platform.localeName.replaceAll('-', '_'),

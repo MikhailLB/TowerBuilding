@@ -58,6 +58,7 @@ class InstallSignal {
         registerOnDeepLinkingCallback: true,
       );
       debugPrint('[TB.IS] initSdk OK');
+      _armCallbackFallbacks();
     } catch (err, st) {
       debugPrint('[TB.IS] warmup error: $err\n$st');
       if (!_conversionDone.isCompleted) _conversionDone.complete({});
@@ -125,13 +126,25 @@ class InstallSignal {
     return null;
   }
 
+  void _armCallbackFallbacks() {
+    // On returning launches AppsFlyer often skips conversion/deep-link callbacks.
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (!_conversionDone.isCompleted) {
+        _conversionDone.complete(_conversion ?? <String, dynamic>{});
+      }
+    });
+    Future.delayed(const Duration(milliseconds: 2000), () {
+      if (!_deepLinkDone.isCompleted) _deepLinkDone.complete();
+    });
+  }
+
   Future<Map<String, dynamic>> awaitConversion({
-    Duration timeout = const Duration(seconds: 7),
+    Duration timeout = const Duration(seconds: 5),
   }) =>
-      _conversionDone.future.timeout(timeout, onTimeout: () => {});
+      _conversionDone.future.timeout(timeout, onTimeout: () => <String, dynamic>{});
 
   Future<void> awaitDeepLink({
-    Duration timeout = const Duration(seconds: 5),
+    Duration timeout = const Duration(seconds: 3),
   }) =>
       _deepLinkDone.future.timeout(timeout, onTimeout: () {});
 

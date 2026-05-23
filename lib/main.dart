@@ -75,9 +75,12 @@ Future<void> main() async {
   final dispatch = CoreDispatch(vault);
   final alerts   = AlertRelay(vault);
 
-  // Pre-fire push bootstrap so APNs poll overlaps with first-frame render
+  // Pre-fire push + attribution warmup so they overlap with first-frame render.
   unawaited(alerts.bootstrap().catchError((err) {
     debugPrint('[TB.BOOT] alerts pre-fire: $err');
+  }));
+  unawaited(signal.warmup().catchError((err) {
+    debugPrint('[TB.BOOT] signal pre-fire: $err');
   }));
 
   final gateEnabled =
