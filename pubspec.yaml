@@ -1,7 +1,7 @@
 name: tower_building
-description: "Tower Building - stack blocks and build the tallest tower!"
+description: "A cosy collection of hand-made village puzzle games."
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.2+3
 
 environment:
   sdk: ^3.11.4
@@ -9,32 +9,29 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.8
+  cupertino_icons: ^1.0.9
 
-  # ── Game layer ────────────────────────────────────────────
-  flame: ^1.37.0
-  flame_forge2d: ^0.19.2+6
-  video_player: ^2.11.1
-  shared_preferences: ^2.5.5
-  google_fonts: ^8.1.0
-  audioplayers: ^6.6.0
-  url_launcher: ^6.3.1
-  webview_flutter: ^4.13.1
-  webview_flutter_android: ^4.11.0
-  webview_flutter_wkwebview: ^3.22.0
+  # ── Platform plugins (no game-engine frameworks) ──────────────
+  # The gameplay runs on a hand-written ticker + widget renderer, so there is
+  # no Flame / Forge2D / box2d dependency to fingerprint the build.
+  video_player: ^2.10.0
+  shared_preferences: ^2.4.10
+  audioplayers: ^6.5.0
+  url_launcher: ^6.3.2
+  webview_flutter: ^4.10.0
+  webview_flutter_android: ^4.9.0
+  webview_flutter_wkwebview: ^3.20.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^6.0.0
-  flutter_launcher_icons: ^0.14.4
-  image: ^4.8.0
+  flutter_launcher_icons: ^0.14.3
+  image: ^4.5.4
 
 flutter:
   uses-material-design: true
 
-  # Disable Swift Package Manager — use CocoaPods to avoid SPM modifying
-  # project.pbxproj after pod install, which causes sandbox sync errors in CI.
   config:
     enable-swift-package-manager: false
 
