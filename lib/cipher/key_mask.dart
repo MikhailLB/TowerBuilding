@@ -1,39 +1,51 @@
 import 'dart:typed_data';
 
-/// XOR-based string obfuscation for secrets stored as byte arrays.
+/// Byte-array obfuscation for embedded secrets.
 ///
-/// Seed `towerbld.gate.v1` is unique to TowerBuilding — byte arrays
-/// produced here are NOT interchangeable with LavaPeakRun or any other
-/// sibling project, even for identical plaintext values.
-const _seed = <int>[
-  0x74, 0x6F, 0x77, 0x65, 0x72, 0x62, 0x6C, 0x64,
-  0x2E, 0x67, 0x61, 0x74, 0x65, 0x2E, 0x76, 0x31,
-];
+/// Keystream is produced by a xorshift32 generator seeded through a
+/// Jenkins-style additive mix of [_seed]; each output byte is recovered by
+/// an XOR followed by a per-position bitwise rotation whose amount is taken
+/// from the low bits of the keystream. The combination of rotation + XOR
+/// (rather than a plain XOR) and the xorshift core make the byte tables
+/// unique to this build. [_seed] is project-specific and must never be
+/// shared with another build.
+const String _seed = 'hvbrick::lane.k7';
 
-Uint8List _buildStream(int size) {
-  var hash = 0x811C9DC5;
-  for (final b in _seed) {
-    hash = ((hash ^ b) * 0x01000193) & 0xFFFFFFFF;
+int _mix() {
+  var h = 0x2166AC5D;
+  for (final c in _seed.codeUnits) {
+    h = (h ^ c) & 0xFFFFFFFF;
+    h = (h + (((h << 6) & 0xFFFFFFFF)) + (h >> 2)) & 0xFFFFFFFF;
   }
-  final out = Uint8List(size);
-  var state = hash == 0 ? 0xC0DEBABE : hash;
-  for (var i = 0; i < size; i++) {
-    state = (state * 1103515245 + 12345) & 0x7FFFFFFF;
-    out[i] = (state >> 8) & 0xFF;
+  return h == 0 ? 0x9E3779B9 : h;
+}
+
+Uint8List _buildStream(int n) {
+  var s = _mix();
+  final out = Uint8List(n);
+  for (var i = 0; i < n; i++) {
+    s ^= (s << 13) & 0xFFFFFFFF;
+    s ^= s >> 17;
+    s ^= (s << 5) & 0xFFFFFFFF;
+    out[i] = (s >> 11) & 0xFF;
   }
   return out;
 }
 
-final _keyStream = _buildStream(64);
+final Uint8List _stream = _buildStream(96);
 
-/// Decode an XOR-encoded byte list back to its plaintext string.
-/// Use `tool/encode_creds.dart` to produce byte arrays for new values.
-String reveal(List<int> raw) {
+int _rotr8(int v, int r) =>
+    r == 0 ? v & 0xFF : ((v >> r) | (v << (8 - r))) & 0xFF;
+
+/// Decode an obfuscated byte list back to its plaintext string.
+/// Counterpart to `conceal` in `tool/encode_creds.dart`.
+String unveil(List<int> raw) {
   if (raw.isEmpty) return '';
   final n = raw.length;
   final out = Uint8List(n);
   for (var i = 0; i < n; i++) {
-    out[i] = raw[i] ^ _keyStream[i % _keyStream.length];
+    final k = _stream[i % _stream.length];
+    out[i] = _rotr8(raw[i] & 0xFF, k & 7) ^ k;
   }
   return String.fromCharCodes(out);
 }

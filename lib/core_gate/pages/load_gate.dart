@@ -1,18 +1,20 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
 
-import '../../screens/main_menu_screen.dart';
+import '../../flow/home_screen.dart';
 import '../infra/alert_relay.dart';
 import '../infra/connectivity_probe.dart';
 import '../infra/core_dispatch.dart';
 import '../infra/data_vault.dart';
 import '../infra/install_signal.dart';
 import '../infra/native_link_bridge.dart';
-import '../models/launch_mode.dart';
+import '../models/gate_models.dart';
 import 'allow_screen.dart';
 import 'offline_screen.dart';
 import 'web_shell.dart';
@@ -100,7 +102,7 @@ class _LoadGateState extends State<LoadGate> {
     // ── STEP 1: SceneDelegate cold-start URL (highest priority) ──────
     final nativeColdUrl = await NativeLinkBridge.consumeColdUrl();
     if (nativeColdUrl != null && nativeColdUrl.isNotEmpty) {
-      debugPrint('[TB.LG] native cold-start url → $nativeColdUrl');
+      if (kDebugMode) debugPrint('[HV.gate] cold-start url received');
       await widget.vault.writeMode(LaunchMode.web);
       await widget.vault.consumeOneShotUrl();
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
@@ -163,9 +165,12 @@ class _LoadGateState extends State<LoadGate> {
     if (!online) { if (mounted) _goOffline(fresh: true); return; }
 
     _setBar(_BarStep.midway);
+    // Fresh install: GCD (Get Conversion Data) can take 6–10 s on the first
+    // launch before the real af_status arrives. Wait long enough to capture
+    // Non-organic data so the config endpoint gets a meaningful payload.
     await Future.wait([
-      widget.signal.awaitConversion(timeout: const Duration(seconds: 5)),
-      widget.signal.awaitDeepLink(timeout: const Duration(seconds: 3)),
+      widget.signal.awaitConversion(timeout: const Duration(seconds: 10)),
+      widget.signal.awaitDeepLink(timeout: const Duration(seconds: 6)),
     ]);
     final locale = Platform.localeName.replaceAll('-', '_');
     final body = await widget.signal.buildPayload(
@@ -250,7 +255,7 @@ class _LoadGateState extends State<LoadGate> {
       );
       await widget.dispatch.send(body);
     } catch (e) {
-      debugPrint('[TB.LG] background refresh error: $e');
+      if (kDebugMode) debugPrint('[HV.gate] background refresh error: $e');
     }
   }
 
@@ -295,7 +300,7 @@ class _LoadGateState extends State<LoadGate> {
       );
       await widget.dispatch.send(body);
     } catch (e) {
-      debugPrint('[TB.LG] background dispatch error: $e');
+      if (kDebugMode) debugPrint('[HV.gate] background dispatch error: $e');
     }
   }
 
@@ -340,13 +345,11 @@ class _LoadGateState extends State<LoadGate> {
     ));
   }
 
-  /// Navigate to the white game. LoadGate already serves as the loading
-  /// experience — go straight to the main menu to avoid a double splash.
   void _goGame() {
     if (_navigated) return;
     _navigated = true;
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const MainMenuScreen()),
+      MaterialPageRoute(builder: (_) => const HomeScreen()),
     );
   }
 
@@ -429,3 +432,4 @@ class _LoadGateState extends State<LoadGate> {
     );
   }
 }
+

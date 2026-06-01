@@ -1,21 +1,17 @@
 import '../../cipher/key_mask.dart';
 
 String coreEndpointUrl() {
-  const h = [111, 241, 188, 34, 40, 226, 177, 71, 30, 242, 130, 91, 67, 124, 94, 151, 0, 12, 51, 251, 241, 52, 43, 206, 143, 44, 183, 214, 6, 210, 116, 185, 169, 182, 43, 107, 227];
-  const p = [40, 230, 167, 60, 61, 177, 249, 70, 26, 245, 133];
+  const h = [10, 48, 10, 141, 2, 98, 191, 126, 62, 92, 60, 117, 9, 108, 89, 149, 27, 229, 241, 171, 50, 120, 59, 229, 98, 105, 1, 65, 185, 209, 30, 252, 198, 40, 105, 61, 253];
+  const p = [23, 210, 187, 10, 170, 49, 59, 62, 30, 223, 191];
   if (h.isEmpty) return '';
-  return reveal(h) + reveal(p);
+  return unveil(h) + unveil(p);
 }
 
-const List<int> _gcdMask = [111, 241, 188, 34, 40, 226, 177, 71, 13, 254, 145, 77, 85, 117, 5, 159, 28, 24, 41, 243, 250, 62, 58, 221, 194, 36, 186, 218, 69, 218, 116, 169, 184, 249, 36, 104, 209, 166, 93, 149, 138, 147, 231, 232, 206, 228, 139];
+const List<int> _gcdMask = [10, 48, 10, 141, 2, 98, 191, 126, 166, 90, 181, 99, 140, 252, 239, 213, 107, 239, 197, 235, 130, 216, 25, 33, 196, 107, 66, 89, 163, 211, 30, 253, 130, 251, 170, 59, 207, 174, 97, 36, 235, 44, 52, 53, 208, 131, 74];
 
 String gcdEndpointUrl(String appId, String deviceId) {
-  final host = reveal(_gcdMask);
+  final host = unveil(_gcdMask);
   if (host.isEmpty) return '';
   final sep = host.contains('?') ? '&' : '?';
   return '$host${sep}app_id=$appId&device_id=$deviceId';
 }
-
-String uaChromeBuild() => '136.0.7103.93';
-
-String uaSafariBuild() => '605.1.15';

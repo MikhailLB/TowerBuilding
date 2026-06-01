@@ -41,11 +41,8 @@ class SceneDelegate: FlutterSceneDelegate {
     let keys = ["url", "link", "target", "deeplink", "deep_link"]
 
     #if DEBUG
-    NSLog("[TB.NATIVE] userInfo keys: %@",
+    NSLog("[HV.native] push userInfo keys: %@",
           userInfo.keys.map { "\($0)" }.joined(separator: ", "))
-    for (k, v) in userInfo {
-      NSLog("[TB.NATIVE] userInfo[\(k)] = \(v)")
-    }
     #endif
 
     func scan(_ map: [AnyHashable: Any]) -> String? {
@@ -72,7 +69,6 @@ class SceneDelegate: FlutterSceneDelegate {
   }
 
   static func persist(url: String) {
-    NSLog("[TB.NATIVE] cold-start url -> %@", url)
     let d = UserDefaults.standard
     d.set(url, forKey: coldUrlKey)
     d.synchronize()

@@ -7,13 +7,7 @@ import 'core_gate/infra/core_dispatch.dart';
 import 'core_gate/infra/data_vault.dart';
 import 'core_gate/infra/install_signal.dart';
 import 'core_gate/pages/load_gate.dart';
-import 'screens/loading_screen.dart';
-import 'ui/visual_tokens.dart';
 
-/// Root widget — wires the gray gate services into the app.
-///
-/// When [gateEnabled] is false (no credentials provisioned yet) the app
-/// boots straight into the white game's LoadingScreen.
 class TowerGateApp extends StatelessWidget {
   final DataVault vault;
   final ConnectivityProbe probe;
@@ -42,17 +36,17 @@ class TowerGateApp extends StatelessWidget {
             dispatch: dispatch,
             alerts: alerts,
           )
-        : const LoadingScreen();
+        : const Scaffold(backgroundColor: Colors.black);
 
     return MaterialApp(
       title: CoreConfig.appTitle,
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        scaffoldBackgroundColor: AppColors.sky,
+        scaffoldBackgroundColor: Colors.black,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: AppColors.accent,
-          brightness: Brightness.light,
+          seedColor: const Color(0xFFFFC233),
+          brightness: Brightness.dark,
         ),
       ),
       home: home,

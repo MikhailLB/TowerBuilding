@@ -32,7 +32,6 @@ class InstallSignal {
   Future<void> _doWarmup() async {
     if (_started) return;
     final devKey = CoreConfig.installKey;
-    debugPrint('[TB.IS] warmup devKeyLen=${devKey.length}');
     if (devKey.isEmpty) {
       _started = true;
       if (!_conversionDone.isCompleted) _conversionDone.complete({});
@@ -57,10 +56,10 @@ class InstallSignal {
         registerOnAppOpenAttributionCallback: true,
         registerOnDeepLinkingCallback: true,
       );
-      debugPrint('[TB.IS] initSdk OK');
+      if (kDebugMode) debugPrint('[HV.signal] initSdk done');
       _armCallbackFallbacks();
     } catch (err, st) {
-      debugPrint('[TB.IS] warmup error: $err\n$st');
+      if (kDebugMode) debugPrint('[HV.signal] warmup error: $err\n$st');
       if (!_conversionDone.isCompleted) _conversionDone.complete({});
       if (!_deepLinkDone.isCompleted) _deepLinkDone.complete();
     }
@@ -69,15 +68,11 @@ class InstallSignal {
   Future<void> _requestAtt() async {
     try {
       final status = await AppTrackingTransparency.trackingAuthorizationStatus;
-      debugPrint('[TB.IS] ATT status=$status');
       if (status != TrackingStatus.notDetermined) return;
       await WidgetsBinding.instance.endOfFrame;
       await Future.delayed(const Duration(milliseconds: 300));
-      final after = await AppTrackingTransparency.requestTrackingAuthorization();
-      debugPrint('[TB.IS] ATT after prompt=$after');
-    } catch (err) {
-      debugPrint('[TB.IS] ATT skipped: $err');
-    }
+      await AppTrackingTransparency.requestTrackingAuthorization();
+    } catch (_) {}
   }
 
   Map<String, dynamic> _flatten(dynamic raw) {
@@ -89,7 +84,6 @@ class InstallSignal {
 
   void _onConversion(dynamic raw) async {
     final data = _flatten(raw);
-    debugPrint('[TB.IS] conversion ${jsonEncode(data)}');
     if (data['af_status'] == 'Organic') {
       await Future.delayed(Duration(seconds: CoreConfig.organicRetrySeconds));
       final retry = await _refetchGcd();
@@ -127,13 +121,15 @@ class InstallSignal {
   }
 
   void _armCallbackFallbacks() {
-    // On returning launches AppsFlyer often skips conversion/deep-link callbacks.
-    Future.delayed(const Duration(milliseconds: 1500), () {
+    // Fallback guard for returning launches where AppsFlyer skips callbacks.
+    // Must be longer than the longest awaitConversion timeout used anywhere
+    // so real data always wins on fresh installs (GCD can take 6–10 s).
+    Future.delayed(const Duration(seconds: 12), () {
       if (!_conversionDone.isCompleted) {
         _conversionDone.complete(_conversion ?? <String, dynamic>{});
       }
     });
-    Future.delayed(const Duration(milliseconds: 2000), () {
+    Future.delayed(const Duration(seconds: 10), () {
       if (!_deepLinkDone.isCompleted) _deepLinkDone.complete();
     });
   }
@@ -196,7 +192,6 @@ class InstallSignal {
       payload['firebase_project_id'] = CoreConfig.firebaseNumber;
     }
 
-    debugPrint('[TB.IS] payload keys=${payload.keys.toList()}');
     return payload;
   }
 }

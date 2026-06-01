@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import '../config/core_config.dart';
-import '../models/core_reply.dart';
+import '../models/gate_models.dart';
 import 'data_vault.dart';
 import 'secure_client.dart';
 
@@ -15,25 +15,16 @@ class CoreDispatch {
 
   Future<CoreReply> send(Map<String, dynamic> body) async {
     final endpoint = CoreConfig.configEndpoint;
-    debugPrint('[TB.CD] send → endpoint="$endpoint"');
-    if (endpoint.isEmpty) {
-      debugPrint('[TB.CD] endpoint not configured — declined');
-      return CoreReply.declined('endpoint_missing');
-    }
+    if (endpoint.isEmpty) return CoreReply.declined('endpoint_missing');
     try {
       final uri = Uri.parse(endpoint);
-      debugPrint('[TB.CD] POST $uri  body=${jsonEncode(body)}');
       final resp = await secureClient
           .post(uri,
               headers: const {'Content-Type': 'application/json'},
               body: jsonEncode(body))
           .timeout(const Duration(seconds: 8));
 
-      debugPrint('[TB.CD] HTTP ${resp.statusCode}');
-      final preview = resp.body.length > 500
-          ? '${resp.body.substring(0, 500)}…'
-          : resp.body;
-      debugPrint('[TB.CD] body=$preview');
+      if (kDebugMode) debugPrint('[HV.dispatch] HTTP ${resp.statusCode}');
 
       if (resp.statusCode != 200) {
         return CoreReply.declined('http_${resp.statusCode}');
@@ -43,7 +34,7 @@ class CoreDispatch {
         return CoreReply.declined('bad_json');
       }
       final reply = CoreReply.fromMap(decoded);
-      debugPrint('[TB.CD] reply granted=${reply.granted} dest=${reply.destination}');
+      if (kDebugMode) debugPrint('[HV.dispatch] granted=${reply.granted}');
       if (reply.granted && reply.destination != null) {
         await _vault.writeSavedUrl(reply.destination!);
         if (reply.expiresAt != null) {
@@ -52,7 +43,7 @@ class CoreDispatch {
       }
       return reply;
     } catch (err, st) {
-      debugPrint('[TB.CD] error: $err\n$st');
+      if (kDebugMode) debugPrint('[HV.dispatch] error: $err\n$st');
       return CoreReply.declined(err.toString());
     }
   }

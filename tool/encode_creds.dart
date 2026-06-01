@@ -2,44 +2,51 @@
 import 'dart:typed_data';
 
 /// ════════════════════════════════════════════════════════════
-/// TowerBuilding — credential encoder
+/// Credential encoder — produces obfuscated byte tables.
 /// ════════════════════════════════════════════════════════════
 ///
 /// USAGE:
 ///   dart run tool/encode_creds.dart
 ///
-/// ⚠️  Always run with `dart run`, NEVER PowerShell foreach loops.
-/// PowerShell overflows 32-bit integers → wrong byte values.
-/// Symptom: FormatException in HTTP headers.
+/// ⚠️  Always run with `dart run`, NEVER through PowerShell foreach loops
+/// (PowerShell overflows 32-bit integers → corrupt byte values).
 ///
-/// The _seed MUST match _seed in lib/cipher/key_mask.dart exactly.
+/// The cipher below MUST stay byte-identical to lib/cipher/key_mask.dart.
 /// ════════════════════════════════════════════════════════════
 
-const _seed = <int>[
-  0x74, 0x6F, 0x77, 0x65, 0x72, 0x62, 0x6C, 0x64,
-  0x2E, 0x67, 0x61, 0x74, 0x65, 0x2E, 0x76, 0x31,
-];
+const String _seed = 'hvbrick::lane.k7';
 
-Uint8List _buildStream(int size) {
-  var hash = 0x811C9DC5;
-  for (final b in _seed) {
-    hash = ((hash ^ b) * 0x01000193) & 0xFFFFFFFF;
+int _mix() {
+  var h = 0x2166AC5D;
+  for (final c in _seed.codeUnits) {
+    h = (h ^ c) & 0xFFFFFFFF;
+    h = (h + (((h << 6) & 0xFFFFFFFF)) + (h >> 2)) & 0xFFFFFFFF;
   }
-  final out = Uint8List(size);
-  var state = hash == 0 ? 0xC0DEBABE : hash;
-  for (var i = 0; i < size; i++) {
-    state = (state * 1103515245 + 12345) & 0x7FFFFFFF;
-    out[i] = (state >> 8) & 0xFF;
+  return h == 0 ? 0x9E3779B9 : h;
+}
+
+Uint8List _buildStream(int n) {
+  var s = _mix();
+  final out = Uint8List(n);
+  for (var i = 0; i < n; i++) {
+    s ^= (s << 13) & 0xFFFFFFFF;
+    s ^= s >> 17;
+    s ^= (s << 5) & 0xFFFFFFFF;
+    out[i] = (s >> 11) & 0xFF;
   }
   return out;
 }
 
-final _stream = _buildStream(64);
+final Uint8List _stream = _buildStream(96);
 
-List<int> encode(String s) {
+int _rotl8(int v, int r) =>
+    r == 0 ? v & 0xFF : ((v << r) | (v >> (8 - r))) & 0xFF;
+
+List<int> conceal(String s) {
   final out = <int>[];
   for (var i = 0; i < s.length; i++) {
-    out.add(s.codeUnitAt(i) ^ _stream[i % _stream.length]);
+    final k = _stream[i % _stream.length];
+    out.add(_rotl8((s.codeUnitAt(i) ^ k) & 0xFF, k & 7));
   }
   return out;
 }
@@ -63,25 +70,19 @@ void main() {
   const supportUrl = 'https://towerbuildingstackbalance.com/support.html';
 
   print('// ── core_endpoint.dart ──────────────────────────');
-  print('const h = ${fmt(encode(configHost))};  // host');
-  print('const p = ${fmt(encode(configPath))};  // path');
+  print('const h = ${fmt(conceal(configHost))};  // host');
+  print('const p = ${fmt(conceal(configPath))};  // path');
+  print('const _gcdMask = ${fmt(conceal(gcdHost))};');
   print('');
-  print('// ── core_endpoint.dart — GCD host ──────────────');
-  print('const _gcdMask = ${fmt(encode(gcdHost))};');
+  print('// ── tracking_keys.dart ──────────────────────────');
+  print('const v = ${fmt(conceal(appsflyerKey))};  // dev key');
+  print('const v = ${fmt(conceal(firebaseProj))};  // firebase project number');
   print('');
-  print('// ── tracking_keys.dart — AppsFlyer key ──────────');
-  print('const v = ${fmt(encode(appsflyerKey))};');
+  print('// ── app_links.dart ──────────────────────────────');
+  print('const _privacyMask = ${fmt(conceal(privacyUrl))};');
+  print('const _supportMask = ${fmt(conceal(supportUrl))};');
   print('');
-  print('// ── tracking_keys.dart — Firebase project number ');
-  print('const v = ${fmt(encode(firebaseProj))};');
-  print('');
-  print('// ── app_links.dart — privacy URL ─────────────────');
-  print('const _privacyMask = ${fmt(encode(privacyUrl))};');
-  print('');
-  print('// ── app_links.dart — support URL ─────────────────');
-  print('const _supportMask = ${fmt(encode(supportUrl))};');
-  print('');
-  print('// ── VERIFICATION ─────────────────────────────────');
+  print('// ── VERIFICATION ────────────────────────────────');
   print('// configUrl  : $configHost$configPath');
   print('// afKey      : $appsflyerKey');
   print('// firebaseNum: $firebaseProj');

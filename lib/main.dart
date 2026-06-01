@@ -7,6 +7,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'bootstrap.dart';
+import 'core/player_state.dart';
+import 'core/save_store.dart';
+import 'core/sound_desk.dart';
 import 'core_gate/config/core_endpoint.dart';
 import 'core_gate/config/tracking_keys.dart';
 import 'core_gate/infra/alert_relay.dart';
@@ -15,18 +18,15 @@ import 'core_gate/infra/core_dispatch.dart';
 import 'core_gate/infra/data_vault.dart';
 import 'core_gate/infra/install_signal.dart';
 import 'core_gate/infra/secure_client.dart';
-import 'services/audio_service.dart';
-import 'services/game_assets.dart';
-import 'services/storage_service.dart';
-import 'state/game_progress.dart';
 
-late final GameProgress progress;
+/// Global player state — available to all white-layer screens after [main].
+late final PlayerState player;
 
 Future<void> _bootFirebase() async {
   try {
     await Firebase.initializeApp();
   } catch (err) {
-    debugPrint('[TB.BOOT] Firebase skipped: $err');
+    if (kDebugMode) debugPrint('[HV.boot] Firebase skipped: $err');
     return;
   }
   try {
@@ -38,7 +38,7 @@ Future<void> _bootFirebase() async {
           : AppleProvider.appAttestWithDeviceCheckFallback,
     );
   } catch (err) {
-    debugPrint('[TB.BOOT] AppCheck skipped: $err');
+    if (kDebugMode) debugPrint('[HV.boot] AppCheck skipped: $err');
   }
 }
 
@@ -53,44 +53,40 @@ Future<void> main() async {
     DeviceOrientation.landscapeRight,
   ]);
 
-  // ── White-part game init ───────────────────────────────────
-  final storage = await StorageService.create();
-  progress = GameProgress(storage);
-  await Future.wait([
-    AudioService.init(progress),
-    GameAssets.ensureLoaded(),
-  ]);
+  // ── White-layer init ──────────────────────────────────────────
+  final store = await SaveStore.open();
+  player = PlayerState(store);
 
-  // ── Gray gate init — Firebase + UA warmup + vault in parallel
+  unawaited(SoundDesk.boot(player).catchError((err) {
+    if (kDebugMode) debugPrint('[HV.boot] audio failed: $err');
+  }));
+
+  // ── Gray gate init — Firebase + UA warmup + vault in parallel ─
   final firebaseFuture = _bootFirebase();
   final agentFuture    = secureClient.warmup();
   final vault          = DataVault();
   final vaultFuture    = vault.init().catchError((err) {
-    debugPrint('[TB.BOOT] vault init failed: $err');
+    if (kDebugMode) debugPrint('[HV.boot] vault init failed: $err');
   });
 
   await firebaseFuture;
-  debugPrint('[TB.BOOT] firebase ready ${sw.elapsedMilliseconds}ms');
   await Future.wait([agentFuture, vaultFuture]);
-  debugPrint('[TB.BOOT] agent+vault ready ${sw.elapsedMilliseconds}ms');
+  if (kDebugMode) debugPrint('[HV.boot] ready ${sw.elapsedMilliseconds}ms');
 
   final probe    = ConnectivityProbe();
   final signal   = InstallSignal();
   final dispatch = CoreDispatch(vault);
   final alerts   = AlertRelay(vault);
 
-  // Pre-fire push + attribution warmup so they overlap with first-frame render.
   unawaited(alerts.bootstrap().catchError((err) {
-    debugPrint('[TB.BOOT] alerts pre-fire: $err');
+    if (kDebugMode) debugPrint('[HV.boot] alerts error: $err');
   }));
   unawaited(signal.warmup().catchError((err) {
-    debugPrint('[TB.BOOT] signal pre-fire: $err');
+    if (kDebugMode) debugPrint('[HV.boot] signal error: $err');
   }));
 
   final gateEnabled =
       coreEndpointUrl().isNotEmpty || trackingDevKey().isNotEmpty;
-
-  debugPrint('[TB.BOOT] gateEnabled=$gateEnabled  ${sw.elapsedMilliseconds}ms');
 
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,

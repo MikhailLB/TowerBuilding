@@ -9,6 +9,6 @@ abstract final class GateAssets {
 
   static String notification(Orientation orientation) =>
       orientation == Orientation.landscape
-          ? 'assets/additional_assets/notifications/16x9_notification.webp'
-          : 'assets/additional_assets/notifications/9x16_notification.webp';
+          ? 'assets/additional_assets/notifications/16x9_notification.png'
+          : 'assets/additional_assets/notifications/9x16_notification.png';
 }

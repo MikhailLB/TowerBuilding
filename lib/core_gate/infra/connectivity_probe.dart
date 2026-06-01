@@ -1,28 +1,37 @@
+import 'dart:async';
 import 'dart:io';
-import 'package:connectivity_plus/connectivity_plus.dart';
 
-/// DNS-based connectivity check — avoids false positives on captive portals.
+/// Reachability check that performs a real DNS resolution instead of relying
+/// on the radio link state, so captive portals and "connected but no route"
+/// situations are reported as offline. A lightweight poller exposes changes
+/// as a boolean stream (true = reachable) without any platform plugin.
 class ConnectivityProbe {
-  final Connectivity _conn = Connectivity();
+  static const List<String> _hosts = ['cloudflare.com', 'apple.com'];
 
   Future<bool> isOnline() async {
-    try {
-      final results = await _conn.checkConnectivity();
-      if (results.every((r) => r == ConnectivityResult.none)) return false;
-    } catch (_) {
-      return false;
+    for (final host in _hosts) {
+      try {
+        final res = await InternetAddress.lookup(host)
+            .timeout(const Duration(seconds: 4));
+        if (res.isNotEmpty && res.first.rawAddress.isNotEmpty) return true;
+      } catch (_) {
+        // try next host
+      }
     }
-    try {
-      final lookup = await InternetAddress.lookup('cloudflare.com')
-          .timeout(const Duration(seconds: 4));
-      return lookup.isNotEmpty && lookup.first.rawAddress.isNotEmpty;
-    } on SocketException {
-      return false;
-    } catch (_) {
-      return false;
-    }
+    return false;
   }
 
-  Stream<List<ConnectivityResult>> get onChange =>
-      _conn.onConnectivityChanged;
+  /// Emits the reachability state whenever it flips. Polls on a relaxed
+  /// cadence to keep battery impact negligible.
+  Stream<bool> watch({Duration every = const Duration(seconds: 5)}) async* {
+    bool? last;
+    while (true) {
+      final now = await isOnline();
+      if (now != last) {
+        last = now;
+        yield now;
+      }
+      await Future.delayed(every);
+    }
+  }
 }

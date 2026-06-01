@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -86,12 +85,9 @@ class AlertRelay {
       }
       _token = await _fcm!.getToken();
       _ready = true;
-      debugPrint('[TB.AR] bootstrap OK token=${_token == null ? 'null' : 'present'}');
-      if (kDebugMode && _token != null) {
-        debugPrint('[TB.AR] FCM TOKEN (full): $_token');
-      }
-    } catch (err, st) {
-      debugPrint('[TB.AR] bootstrap error: $err\n$st');
+      if (kDebugMode) debugPrint('[HV.push] bootstrap token=${_token == null ? 'null' : 'ok'}');
+    } catch (err) {
+      if (kDebugMode) debugPrint('[HV.push] bootstrap error: $err');
     } finally {
       if (!_coldStartGate.isCompleted) _coldStartGate.complete();
     }
@@ -107,7 +103,7 @@ class AlertRelay {
         final url = _extractUrl(msg);
         if (url != null) {
           await _vault.stashOneShotUrl(url);
-          debugPrint('[TB.AR] cold-start url stashed');
+          if (kDebugMode) debugPrint('[HV.push] cold-start url stashed');
         }
       }
     } catch (_) {}
@@ -252,7 +248,7 @@ class AlertRelay {
       await _vault.writePushConsent(ok);
       return ok;
     } catch (err) {
-      debugPrint('[TB.AR] askConsent error: $err');
+      if (kDebugMode) debugPrint('[HV.push] askConsent error: $err');
       return false;
     }
   }
@@ -321,10 +317,10 @@ class AlertRelay {
   void _dispatchUrl(String url, {required String from}) {
     final cb = onPushUrl;
     if (cb != null) {
-      debugPrint('[TB.AR] dispatch ($from) → live WebShell');
+      if (kDebugMode) debugPrint('[HV.push] dispatch ($from) → shell');
       cb(url);
     } else {
-      debugPrint('[TB.AR] dispatch ($from) → stash');
+      if (kDebugMode) debugPrint('[HV.push] dispatch ($from) → stash');
       _vault.stashOneShotUrl(url);
     }
   }

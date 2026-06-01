@@ -1,11 +1,11 @@
 import '../../cipher/key_mask.dart';
 
 String trackingDevKey() {
-  const v = [100, 189, 173, 53, 98, 154, 210, 57, 36, 229, 180, 83, 89, 88, 69, 201, 60, 94, 48, 254, 228, 21];
-  return reveal(v);
+  const v = [38, 185, 27, 72, 80, 26, 137, 225, 239, 215, 39, 125, 143, 46, 111, 103, 235, 204, 247, 131, 99, 106];
+  return unveil(v);
 }
 
 String messagingProjectId() {
-  const v = [52, 182, 255, 98, 104, 238, 172, 88, 92, 168, 198, 11];
-  return reveal(v);
+  const v = [103, 216, 62, 157, 0, 110, 110, 185, 44, 113, 30, 37];
+  return unveil(v);
 }
