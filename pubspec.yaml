@@ -1,7 +1,7 @@
 name: tower_building
 description: "Tower Building - stack blocks and build the tallest tower!"
 publish_to: 'none'
-version: 1.0.2+3
+version: 1.0.2+4
 
 environment:
   sdk: ^3.11.4
