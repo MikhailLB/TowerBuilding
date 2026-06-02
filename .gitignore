@@ -45,3 +45,7 @@ app.*.map.json
 /android/app/release
 
 build_log.txt
+
+# Firebase — contains API keys, never commit
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist

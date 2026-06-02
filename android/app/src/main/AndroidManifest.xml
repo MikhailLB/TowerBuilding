@@ -29,12 +29,7 @@
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
             android:hardwareAccelerated="true"
             android:screenOrientation="fullUser"
-            android:windowSoftInputMode="adjustPan">
-            <!-- adjustPan instead of adjustResize: the core WebView (PlatformView)
-                 re-layouts on every window resize, which causes visible jitter when
-                 the soft keyboard animates in. adjustPan slides the window up
-                 without resizing — no jitter. JS in BrowserShell still scrolls the
-                 focused input into view via window.visualViewport. -->
+            android:windowSoftInputMode="adjustResize">
             <meta-data
                 android:name="io.flutter.embedding.android.NormalTheme"
                 android:resource="@style/NormalTheme"/>
