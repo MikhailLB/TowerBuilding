@@ -1,4 +1,5 @@
 import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 
@@ -31,6 +32,10 @@ class SoundDesk with WidgetsBindingObserver {
     if (inst == null) throw StateError('SoundDesk.boot() not called');
     return inst;
   }
+
+  /// Null-safe handle for callers that may run before [boot] completes
+  /// (e.g. a button tapped on the very first frame).
+  static SoundDesk? get maybe => _i;
 
   static const _bedLobby = 'music/mainmenumusic.mp3';
   static const _bedBuild = 'music/gameplaymusic.mp3';
@@ -68,14 +73,14 @@ class SoundDesk with WidgetsBindingObserver {
         ),
       );
     } catch (e) {
-      debugPrint('SoundDesk: audio context failed: $e');
+      if (kDebugMode) debugPrint('SoundDesk: audio context failed: $e');
     }
 
     try {
       await desk._bed.setReleaseMode(ReleaseMode.loop);
       await desk._bed.setVolume(player.musicLevel);
     } catch (e) {
-      debugPrint('SoundDesk: bed init failed: $e');
+      if (kDebugMode) debugPrint('SoundDesk: bed init failed: $e');
     }
     player.addListener(desk._onPrefs);
     WidgetsBinding.instance.addObserver(desk);
@@ -115,7 +120,7 @@ class SoundDesk with WidgetsBindingObserver {
       await _bed.setVolume(_player.musicLevel);
       await _bed.play(AssetSource(_bedPath(bed)));
     } catch (e) {
-      debugPrint('SoundDesk: bed failed: $e');
+      if (kDebugMode) debugPrint('SoundDesk: bed failed: $e');
     }
   }
 
@@ -138,7 +143,7 @@ class SoundDesk with WidgetsBindingObserver {
       await one.play(AssetSource(path));
       one.onPlayerComplete.first.then((_) => one.dispose());
     } catch (e) {
-      debugPrint('SoundDesk: cue failed: $e');
+      if (kDebugMode) debugPrint('SoundDesk: cue failed: $e');
       one.dispose();
     }
   }

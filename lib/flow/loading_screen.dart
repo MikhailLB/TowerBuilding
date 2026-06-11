@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:video_player/video_player.dart';
@@ -95,7 +96,7 @@ class _LoadingScreenState extends State<LoadingScreen>
       _startProgressIfNeeded();
       _startPreloadIfNeeded();
     } catch (e, st) {
-      debugPrint('Loading video failed ($path): $e\n$st');
+      if (kDebugMode) debugPrint('Loading video failed ($path): $e\n$st');
       await controller.dispose();
       if (mounted) {
         setState(() {
@@ -131,7 +132,7 @@ class _LoadingScreenState extends State<LoadingScreen>
       try {
         await precacheImage(AssetImage(Art.bootBar(i)), context);
       } catch (e) {
-        debugPrint('LoadingScreen: failed to preload bar $i: $e');
+        if (kDebugMode) debugPrint('LoadingScreen: failed to preload bar $i: $e');
       }
     }
   }

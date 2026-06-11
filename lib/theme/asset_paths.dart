@@ -16,6 +16,9 @@ class Art {
   static const mark = 'assets/logo.webp';
   static const wordmark = 'assets/logo_name.webp';
 
+  /// Hand-painted hero illustration shown on the home hub.
+  static const homeTower = 'assets/art/home_tower.png';
+
   /// House facade art, indexed 1..6.
   static String house(int n) => '$_scene/block_asset_0$n.webp';
 

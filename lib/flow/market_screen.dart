@@ -7,9 +7,8 @@ import '../theme/sky_theme.dart';
 import '../theme/type_scale.dart';
 import '../widgets/plank_panel.dart';
 import '../widgets/sky_backdrop.dart';
+import '../widgets/storybook_button.dart';
 
-/// The Market — spend earned coins on new backdrop skies. The selected sky is
-/// applied everywhere via [SkyBackdrop].
 class MarketScreen extends StatefulWidget {
   const MarketScreen({super.key});
 
@@ -18,45 +17,18 @@ class MarketScreen extends StatefulWidget {
 }
 
 class _MarketScreenState extends State<MarketScreen> {
-  @override
-  void initState() {
-    super.initState();
-    player.addListener(_refresh);
-  }
+  String? _msg;
 
-  void _refresh() {
-    if (mounted) setState(() {});
-  }
-
-  @override
-  void dispose() {
-    player.removeListener(_refresh);
-    super.dispose();
-  }
-
-  Future<void> _onTap(SkyTheme t) async {
-    SoundDesk.it.cue(Cue.tap);
-    if (player.ownsTheme(t.id)) {
-      await player.selectTheme(t.id);
-      return;
-    }
+  Future<void> _buy(SkyTheme t) async {
     final ok = await player.unlockTheme(t);
-    if (!ok) {
-      _toast('Not enough coins for ${t.name}');
-      return;
-    }
-    await player.selectTheme(t.id);
-    _toast('${t.name} unlocked & applied');
+    SoundDesk.maybe?.cue(ok ? Cue.settle : Cue.collapse);
+    setState(() => _msg = ok ? 'Unlocked ${t.name}!' : 'Not enough coins');
   }
 
-  void _toast(String text) {
-    ScaffoldMessenger.of(context)
-      ..clearSnackBars()
-      ..showSnackBar(SnackBar(
-        backgroundColor: Hue.panelDeep,
-        content: Text(text, style: Lettering.body(color: Hue.parchment)),
-        duration: const Duration(seconds: 2),
-      ));
+  void _use(SkyTheme t) {
+    player.selectTheme(t.id);
+    SoundDesk.maybe?.cue(Cue.tap);
+    setState(() => _msg = '${t.name} applied');
   }
 
   @override
@@ -65,154 +37,96 @@ class _MarketScreenState extends State<MarketScreen> {
       backgroundColor: Hue.noon,
       body: SkyBackdrop(
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    RoundIconButton(
-                      icon: Icons.arrow_back_rounded,
-                      onTap: () {
-                        SoundDesk.it.cue(Cue.tap);
-                        Navigator.of(context).pop();
-                      },
+          child: AnimatedBuilder(
+            animation: player,
+            builder: (context, _) {
+              return Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+                    child: Row(
+                      children: [
+                        RoundIconButton(
+                            icon: Icons.arrow_back_rounded,
+                            onTap: () => Navigator.of(context).maybePop()),
+                        const SizedBox(width: 12),
+                        Text('Sky Market',
+                            style: Lettering.heading(size: 22, color: Hue.parchment)),
+                        const Spacer(),
+                        StatChip(
+                            icon: Icons.toll_rounded,
+                            label: '${player.coins}',
+                            iconColor: Hue.gold),
+                      ],
                     ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text('Sky Market',
-                          style: Lettering.heading(size: 24, color: Hue.ink)),
-                    ),
-                    StatChip(
-                        icon: Icons.savings_rounded, label: '${player.coins}'),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: GridView.count(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.92,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    children:
-                        SkyCatalogue.all.map(_themeCard).toList(),
                   ),
-                ),
-              ],
-            ),
+                  if (_msg != null)
+                    Padding(
+                      padding: const EdgeInsets.all(4),
+                      child: Text(_msg!,
+                          style: Lettering.body(size: 13, color: Hue.parchment)),
+                    ),
+                  Expanded(
+                    child: ListView(
+                      padding: const EdgeInsets.all(16),
+                      children: [for (final t in SkyCatalogue.all) _row(t)],
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
     );
   }
 
-  Widget _themeCard(SkyTheme t) {
+  Widget _row(SkyTheme t) {
     final owned = player.ownsTheme(t.id);
     final selected = player.selectedTheme == t.id;
-    final preview = t.phases.first;
-    return GestureDetector(
-      onTap: () => _onTap(t),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Hue.panel,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(
-            color: selected ? Hue.gold : Hue.timberDeep,
-            width: 3,
-          ),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: PlankPanel(
+        padding: const EdgeInsets.all(12),
+        child: Row(
           children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(12),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: t.phases.first,
+                ),
+                border: Border.all(color: Hue.timberDeep, width: 2),
+              ),
+              child: Icon(t.icon, color: Colors.white.withValues(alpha: 0.9)),
+            ),
+            const SizedBox(width: 14),
             Expanded(
-              child: Stack(
-                fit: StackFit.expand,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: preview,
-                      ),
-                    ),
+                  Text(t.name, style: Lettering.heading(size: 17, color: Hue.ink)),
+                  Text(
+                    owned ? (selected ? 'In use' : 'Owned') : '${t.cost} coins',
+                    style: Lettering.body(size: 12, color: Hue.inkSoft),
                   ),
-                  Align(
-                    alignment: Alignment.topLeft,
-                    child: Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Icon(t.icon, color: Colors.white, size: 24),
-                    ),
-                  ),
-                  if (t.animated)
-                    const Align(
-                      alignment: Alignment.topRight,
-                      child: Padding(
-                        padding: EdgeInsets.all(8),
-                        child: Icon(Icons.loop_rounded,
-                            color: Colors.white, size: 18),
-                      ),
-                    ),
-                  if (!owned)
-                    const Align(
-                      alignment: Alignment.bottomRight,
-                      child: Padding(
-                        padding: EdgeInsets.all(8),
-                        child: Icon(Icons.lock_rounded, color: Colors.white),
-                      ),
-                    ),
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(t.name,
-                        style: Lettering.heading(size: 14),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis),
-                  ),
-                  _pill(t, owned, selected),
-                ],
-              ),
-            ),
+            if (!owned)
+              StorybookButton(
+                  label: 'Buy', tone: BtnTone.moss, height: 46, fontSize: 15, onTap: () => _buy(t))
+            else if (!selected)
+              StorybookButton(
+                  label: 'Use', tone: BtnTone.plank, height: 46, fontSize: 15, onTap: () => _use(t))
+            else
+              const Icon(Icons.check_circle_rounded, color: Hue.moss, size: 28),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _pill(SkyTheme t, bool owned, bool selected) {
-    late final String label;
-    late final Color bg;
-    late final IconData icon;
-    if (selected) {
-      label = 'Active';
-      bg = Hue.gold;
-      icon = Icons.check_rounded;
-    } else if (owned) {
-      label = 'Use';
-      bg = Hue.moss;
-      icon = Icons.brush_rounded;
-    } else {
-      label = '${t.cost}';
-      bg = Hue.timber;
-      icon = Icons.savings_rounded;
-    }
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(12)),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 13, color: selected ? Hue.ink : Colors.white),
-          const SizedBox(width: 4),
-          Text(label,
-              style: Lettering.caption(
-                  size: 12, color: selected ? Hue.ink : Colors.white)),
-        ],
       ),
     );
   }

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -13,7 +14,7 @@ late final PlayerState player;
 
 Future<void> main() async {
   runZonedGuarded(_boot, (error, stack) {
-    debugPrint('BOOT FATAL: $error\n$stack');
+    if (kDebugMode) debugPrint('BOOT FATAL: $error\n$stack');
     runApp(_BootErrorApp(message: '$error'));
   });
 }
@@ -22,9 +23,7 @@ Future<void> _boot() async {
   WidgetsFlutterBinding.ensureInitialized();
   FlutterError.onError = (details) {
     FlutterError.presentError(details);
-    debugPrint('FLUTTER ERROR: ${details.exceptionAsString()}');
   };
-  debugPrint('BOOT: start');
 
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
@@ -32,19 +31,16 @@ Future<void> _boot() async {
     DeviceOrientation.landscapeLeft,
     DeviceOrientation.landscapeRight,
   ]);
-  debugPrint('BOOT: orientation set');
 
   final store = await SaveStore.open();
   player = PlayerState(store);
-  debugPrint('BOOT: store opened');
 
   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
     statusBarColor: Colors.transparent,
     statusBarIconBrightness: Brightness.light,
   ));
 
-  debugPrint('BOOT: runApp');
-  runApp(const HollowValeApp());
+  runApp(const TowerBuildingApp());
 
   // Audio is brought up after the first frame so a stalled native audio
   // session can never block the UI.
@@ -54,9 +50,8 @@ Future<void> _boot() async {
 Future<void> _bootAudio() async {
   try {
     await SoundDesk.boot(player);
-    debugPrint('BOOT: audio ready');
   } catch (e) {
-    debugPrint('BOOT: audio boot failed: $e');
+    if (kDebugMode) debugPrint('audio boot failed: $e');
   }
 }
 

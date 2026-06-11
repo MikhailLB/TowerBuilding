@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../core/sound_desk.dart';
 import '../main.dart';
 import '../meta/achievements.dart';
 import '../theme/palette.dart';
@@ -8,77 +7,44 @@ import '../theme/type_scale.dart';
 import '../widgets/plank_panel.dart';
 import '../widgets/sky_backdrop.dart';
 
-/// Trophy room. Achievements unlock automatically as their condition is met
-/// (the player model grants their coin reward); this screen just displays them.
-class AchievementsScreen extends StatefulWidget {
+class AchievementsScreen extends StatelessWidget {
   const AchievementsScreen({super.key});
 
   @override
-  State<AchievementsScreen> createState() => _AchievementsScreenState();
-}
-
-class _AchievementsScreenState extends State<AchievementsScreen> {
-  @override
-  void initState() {
-    super.initState();
-    // Catch up on anything earned offline.
-    player.syncAchievements();
-    player.addListener(_refresh);
-  }
-
-  void _refresh() {
-    if (mounted) setState(() {});
-  }
-
-  @override
-  void dispose() {
-    player.removeListener(_refresh);
-    super.dispose();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    final total = AchievementBook.all.length;
-    final done = player.achievementCount;
+    final all = AchievementBook.all;
+    final done = all.where((a) => player.achieved(a.id)).length;
     return Scaffold(
       backgroundColor: Hue.noon,
       body: SkyBackdrop(
         child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-            child: Column(
-              children: [
-                Row(
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+                child: Row(
                   children: [
                     RoundIconButton(
-                      icon: Icons.arrow_back_rounded,
-                      onTap: () {
-                        SoundDesk.it.cue(Cue.tap);
-                        Navigator.of(context).pop();
-                      },
-                    ),
+                        icon: Icons.arrow_back_rounded,
+                        onTap: () => Navigator.of(context).maybePop()),
                     const SizedBox(width: 12),
-                    Expanded(
-                      child: Text('Achievements',
-                          style: Lettering.heading(size: 24, color: Hue.ink)),
-                    ),
+                    Text('Awards',
+                        style: Lettering.heading(size: 22, color: Hue.parchment)),
+                    const Spacer(),
                     StatChip(
-                      icon: Icons.emoji_events_rounded,
-                      label: '$done/$total',
-                      iconColor: Hue.gold,
-                    ),
+                        icon: Icons.emoji_events_rounded,
+                        label: '$done / ${all.length}',
+                        iconColor: Hue.gold),
                   ],
                 ),
-                const SizedBox(height: 12),
-                Expanded(
-                  child: ListView.separated(
-                    itemCount: AchievementBook.all.length,
-                    separatorBuilder: (_, _) => const SizedBox(height: 10),
-                    itemBuilder: (_, i) => _row(AchievementBook.all[i]),
-                  ),
+              ),
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.all(16),
+                  children: [for (final a in all) _row(a)],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),
@@ -86,49 +52,45 @@ class _AchievementsScreenState extends State<AchievementsScreen> {
   }
 
   Widget _row(Achievement a) {
-    final unlocked = player.achieved(a.id);
-    return PlankPanel(
-      padding: const EdgeInsets.all(12),
-      tone: unlocked ? Hue.panel : Hue.panel.withValues(alpha: 0.7),
-      child: Row(
-        children: [
-          Container(
-            width: 52,
-            height: 52,
-            decoration: BoxDecoration(
-              color: unlocked ? Hue.gold : Hue.inkSoft.withValues(alpha: 0.4),
-              shape: BoxShape.circle,
+    final got = player.achieved(a.id);
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: PlankPanel(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: got ? Hue.gold.withValues(alpha: 0.22) : Hue.panelDeep.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Hue.timberDeep, width: 2),
+              ),
+              child: Icon(a.icon, color: got ? Hue.gold : Hue.inkSoft, size: 24),
             ),
-            child: Icon(
-              unlocked ? a.icon : Icons.lock_rounded,
-              color: Colors.white,
-              size: 26,
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(a.title, style: Lettering.heading(size: 16, color: Hue.ink)),
+                  Text(a.detail, style: Lettering.body(size: 12, color: Hue.inkSoft)),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(a.title, style: Lettering.heading(size: 16)),
-                Text(a.detail, style: Lettering.body(size: 12.5)),
+                Icon(got ? Icons.check_circle_rounded : Icons.lock_rounded,
+                    color: got ? Hue.moss : Hue.inkSoft, size: 20),
+                const SizedBox(height: 4),
+                Text('+${a.reward}',
+                    style: Lettering.heading(size: 14, color: Hue.gold)),
               ],
             ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Icon(
-                unlocked ? Icons.check_circle_rounded : Icons.savings_rounded,
-                color: unlocked ? Hue.moss : Hue.timber,
-                size: 18,
-              ),
-              const SizedBox(height: 2),
-              Text('+${a.reward}',
-                  style: Lettering.body(size: 12, color: Hue.inkSoft)),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

@@ -27,74 +27,68 @@ class Achievement {
 class AchievementBook {
   AchievementBook._();
 
+  static int _cleared(PlayerState p) => p.clearedLevels(GameId.tower);
+
   static final List<Achievement> all = [
     Achievement(
-      id: 'first_win',
-      title: 'Housewarming',
-      detail: 'Clear any puzzle for the first time.',
-      icon: Icons.celebration_rounded,
+      id: 'first_build',
+      title: 'Groundbreaking',
+      detail: 'Clear the first level.',
+      icon: Icons.flag_rounded,
       reward: 25,
-      earned: (p) => p.totalStars > 0,
+      earned: (p) => _cleared(p) >= 1,
     ),
     Achievement(
-      id: 'movers_master',
-      title: 'Moving Master',
-      detail: 'Solve every Moving Day grid.',
-      icon: Icons.grid_view_rounded,
-      reward: 60,
-      earned: (p) => _allLevels(p, GameId.movingDay),
+      id: 'floor_5',
+      title: 'Five Floors Up',
+      detail: 'Clear 5 levels.',
+      icon: Icons.stairs_rounded,
+      reward: 40,
+      earned: (p) => _cleared(p) >= 5,
     ),
     Achievement(
-      id: 'tall_order',
-      title: 'Tall Order',
-      detail: 'Beat the 7-house Skyline Movers tower.',
-      icon: Icons.view_column_rounded,
+      id: 'floor_15',
+      title: 'Mid-Rise',
+      detail: 'Clear 15 levels.',
+      icon: Icons.apartment_rounded,
       reward: 80,
-      earned: (p) => p.stars(GameId.skyline, 4) > 0,
+      earned: (p) => _cleared(p) >= 15,
     ),
     Achievement(
-      id: 'big_merge',
-      title: 'Grand Estate',
-      detail: 'Reach the top tier in Cozy Merge.',
-      icon: Icons.dashboard_customize_rounded,
-      reward: 70,
-      earned: (p) => p.stars(GameId.merge, 2) > 0,
+      id: 'floor_30',
+      title: 'High-Rise',
+      detail: 'Clear 30 levels.',
+      icon: Icons.location_city_rounded,
+      reward: 140,
+      earned: (p) => _cleared(p) >= 30,
     ),
     Achievement(
-      id: 'sharp_eye',
-      title: 'Sharp Eye',
-      detail: 'Clear the largest Neighbours board.',
-      icon: Icons.visibility_rounded,
-      reward: 60,
-      earned: (p) => p.stars(GameId.memory, 2) > 0,
+      id: 'topped_out',
+      title: 'Topped Out',
+      detail: 'Clear the whole tower.',
+      icon: Icons.emoji_events_rounded,
+      reward: 300,
+      earned: (p) => _cleared(p) >= GameId.tower.levelCount,
     ),
     Achievement(
-      id: 'lights_on',
-      title: 'Lamplighter',
-      detail: 'Light up the toughest Night Watch street.',
-      icon: Icons.lightbulb_rounded,
-      reward: 60,
-      earned: (p) => p.stars(GameId.lights, 2) > 0,
-    ),
-    Achievement(
-      id: 'collector_25',
-      title: 'Star Collector',
-      detail: 'Earn 25 stars across all games.',
+      id: 'stars_30',
+      title: 'Star Foreman',
+      detail: 'Earn 30 stars.',
       icon: Icons.star_rounded,
-      reward: 50,
-      earned: (p) => p.totalStars >= 25,
+      reward: 60,
+      earned: (p) => p.totalStars >= 30,
     ),
     Achievement(
-      id: 'collector_45',
-      title: 'Constellation',
-      detail: 'Earn 45 stars across all games.',
-      icon: Icons.auto_awesome_rounded,
-      reward: 120,
-      earned: (p) => p.totalStars >= 45,
+      id: 'stars_90',
+      title: 'Master Builder',
+      detail: 'Earn 90 stars.',
+      icon: Icons.workspace_premium_rounded,
+      reward: 200,
+      earned: (p) => p.totalStars >= 90,
     ),
     Achievement(
       id: 'decorator',
-      title: 'Decorator',
+      title: 'Sky Decorator',
       detail: 'Unlock a new sky from the Market.',
       icon: Icons.palette_rounded,
       reward: 40,
@@ -102,7 +96,7 @@ class AchievementBook {
     ),
     Achievement(
       id: 'streak_3',
-      title: 'Regular Visitor',
+      title: 'Regular Crew',
       detail: 'Reach a 3-day daily streak.',
       icon: Icons.calendar_month_rounded,
       reward: 40,
@@ -110,25 +104,18 @@ class AchievementBook {
     ),
     Achievement(
       id: 'rich',
-      title: 'Town Treasurer',
-      detail: 'Earn 500 coins in total.',
+      title: 'Site Treasurer',
+      detail: 'Earn 600 coins in total.',
       icon: Icons.savings_rounded,
-      reward: 100,
-      earned: (p) => p.lifetimeCoins >= 500,
+      reward: 120,
+      earned: (p) => p.lifetimeCoins >= 600,
     ),
   ];
-
-  static bool _allLevels(PlayerState p, GameId game) {
-    for (var l = 0; l < game.levelCount; l++) {
-      if (p.stars(game, l) == 0) return false;
-    }
-    return true;
-  }
 }
 
 /// Seven-day daily reward ladder (coins per consecutive day, looping).
 class DailyLadder {
   DailyLadder._();
-  static const rewards = [20, 30, 40, 60, 80, 100, 200];
+  static const rewards = [20, 30, 40, 60, 80, 100, 220];
   static int rewardFor(int streak) => rewards[(streak - 1).clamp(0, 999) % 7];
 }

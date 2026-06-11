@@ -1,7 +1,7 @@
 name: tower_building
-description: "A cosy collection of hand-made village puzzle games."
+description: "Tower Building — hand-built construction puzzles."
 publish_to: 'none'
-version: 1.0.2+3
+version: 1.0.4+6
 
 environment:
   sdk: ^3.11.4
@@ -38,6 +38,7 @@ flutter:
   assets:
     - assets/logo.webp
     - assets/logo_name.webp
+    - assets/art/
     - assets/gameplay_assets/
     - assets/additional_assets/loading_screen/
     - assets/music/

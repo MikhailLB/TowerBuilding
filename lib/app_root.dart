@@ -3,15 +3,15 @@ import 'package:flutter/material.dart';
 import 'flow/loading_screen.dart';
 import 'theme/palette.dart';
 
-/// Root application widget. Boots into the (unchanged) loading curtain, which
-/// then hands off to the home screen.
-class HollowValeApp extends StatelessWidget {
-  const HollowValeApp({super.key});
+/// Root application widget. Boots into the original loading curtain, which then
+/// hands off to the home hub.
+class TowerBuildingApp extends StatelessWidget {
+  const TowerBuildingApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Village Puzzles',
+      title: 'Tower Building',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
@@ -20,7 +20,10 @@ class HollowValeApp extends StatelessWidget {
           seedColor: Hue.ember,
           brightness: Brightness.light,
         ),
-        fontFamily: null,
+        sliderTheme: const SliderThemeData(
+          trackHeight: 4,
+          overlayShape: RoundSliderOverlayShape(overlayRadius: 14),
+        ),
       ),
       home: const LoadingScreen(),
     );
