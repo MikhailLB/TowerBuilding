@@ -154,6 +154,11 @@ class _LoadingScreenState extends State<LoadingScreen>
   void _goNext() {
     if (_navigated || !mounted) return;
     _navigated = true;
+    // The loader may rotate, but the game itself is portrait-only.
+    SystemChrome.setPreferredOrientations(const [
+      DeviceOrientation.portraitUp,
+      DeviceOrientation.portraitDown,
+    ]);
     Navigator.of(context).pushReplacement(
       PageRouteBuilder(
         pageBuilder: (context, animation, secondary) => const HomeScreen(),
